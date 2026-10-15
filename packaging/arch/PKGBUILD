@@ -1,6 +1,8 @@
+# Maintainer: Donald E. Hunt <g_htop@don-hunt.com>
+# Copyright © 2026 Donald E. Hunt
 pkgname=g_htop
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Read-only GTK process, service, CPU, network and AMD GPU monitor'
 arch=('x86_64')
 license=('Apache-2.0')
@@ -9,7 +11,7 @@ makedepends=('cmake' 'pkgconf')
 optdepends=('pciutils: descriptive AMD GPU names')
 options=('!debug')
 source=("G_htop-${pkgver}.tar.gz")
-sha256sums=('3d7ea83c08e189d2f627b86054010d8caae85fe5dac7440253d3c8eb4127a216')
+sha256sums=('355a8f47e5b6e7231124411a0e79a3bd20118f7b03946eb0e144c8d505c4bd24')
 
 build() {
     cmake -S "$srcdir/G_htop-$pkgver" -B "$srcdir/build" \
