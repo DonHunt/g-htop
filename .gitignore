@@ -1,0 +1,46 @@
+# Out-of-source builds and local release artifacts
+/build/
+/build-*/
+/cmake-build-*/
+/native-dist/
+/dist/
+/_CPack_Packages/
+
+# Generated CMake/compiler state (never ignore CMakeLists.txt or source .cmake files)
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+Testing/
+compile_commands.json
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+/.cache/
+/.clangd/
+
+# Editor, temporary, and development logs
+/.idea/
+/.vscode/
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+*.log
+.DS_Store
+
+# Local task state and launcher; canonical release launcher is under data/
+/.codex-acceptance.json
+/G_htop.desktop
+

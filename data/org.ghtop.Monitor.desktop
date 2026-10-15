@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=G_htop
+Comment=Read-only Linux process and system monitor
+Exec=G_htop
+TryExec=G_htop
+Icon=G_htop
+Terminal=false
+Categories=System;Monitor;
+Keywords=process;services;CPU;GPU;network;monitor;
+StartupNotify=true

@@ -1,0 +1,24 @@
+pkgname=g_htop
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Read-only GTK process, service, CPU, network and AMD GPU monitor'
+arch=('x86_64')
+license=('Apache-2.0')
+depends=('gtkmm3' 'glibc' 'gcc-libs' 'systemd' 'iproute2' 'coreutils' 'hicolor-icon-theme')
+makedepends=('cmake' 'pkgconf')
+optdepends=('pciutils: descriptive AMD GPU names')
+options=('!debug')
+source=("G_htop-${pkgver}.tar.gz")
+sha256sums=('3d7ea83c08e189d2f627b86054010d8caae85fe5dac7440253d3c8eb4127a216')
+
+build() {
+    cmake -S "$srcdir/G_htop-$pkgver" -B "$srcdir/build" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_INSTALL_LIBDIR=lib
+    cmake --build "$srcdir/build" --parallel 2
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+}

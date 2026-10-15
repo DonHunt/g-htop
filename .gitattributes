@@ -1,0 +1,5 @@
+* text=auto
+*.svg text
+# The finalized recipe hashes the source archive: ship its template inside source,
+# and distribute the pinned recipe separately to avoid a checksum cycle.
+/packaging/arch/PKGBUILD export-ignore
