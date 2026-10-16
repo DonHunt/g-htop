@@ -2,6 +2,16 @@
 
 A read-only Linux process, service, and AMD GPU monitor using C++17 and gtkmm 3. It follows the desktop GTK theme.
 
+## Screenshots
+
+![G_htop dashboard](docs/images/dashboard.png)
+
+*Dashboard with processes, services, GPU history and VRAM, and CPU thread meters.*
+
+![G_htop processes view](docs/images/processes.png)
+
+*Processes view showing process names, PIDs, CPU utilization, and memory usage.*
+
 Launch **G_htop** from the Cinnamon application menu. In **Processes**, click Name, PID, CPU, or Memory to sort; click again to reverse. Process measurements refresh about every two seconds. One fully occupied logical core equals 100% CPU; the first sample initializes counters. Memory is resident memory, including shared pages.
 
 In **Services**, choose All, Active, Inactive, or Failed. Click Description, Unit, Status, or Scope to sort. Both the system manager and your user manager are queried in the background about every five seconds. MainPID is the service's main process when available; N/A is normal for inactive and completed oneshot services. Status displays systemd's reported active state, including activating and deactivating when observed.
@@ -139,8 +149,3 @@ staged local-Qwen workflow used for G_htop Community 0.1.0. The
 stages, implementation evidence, acceptance criteria, corrections, limitations,
 and a reusable task template. These documents describe the observed process;
 they do not establish comparative model performance.
-
-## Screenshots
-
-A reviewed dashboard screenshot may be added before publication. No screenshot
-is bundled yet; raw workstation captures should be checked for private data.
