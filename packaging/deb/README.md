@@ -1,7 +1,13 @@
-# DEB packaging — CONFIGURATION ONLY, NATIVE BUILD UNVERIFIED
+# DEB packaging — v1.1.0 NATIVE BUILD VERIFIED
 
-No DEB has been produced. This workstation is Manjaro; installed dpkg tools do
-not provide a Debian/Ubuntu runtime or prove compatibility. Build from a fresh
+The v1.1.0 DEB binary was built and verified in an isolated Ubuntu 22.04 amd64 userspace.
+Fresh installation, upgrade from a rebuilt Community 0.1.0 baseline, installed
+launch/About/navigation, removal and user-data preservation passed. This shares
+the host kernel/display and does not certify all distributions using this format.
+See the GitHub release PLATFORMS.md for current download and compatibility details.
+
+The workstation is Manjaro; its dpkg tools alone do not establish native compatibility.
+The release DEB was compiled in the Ubuntu userspace, with native dependency scanning. Build from a fresh
 source tree **inside each intended Debian, Ubuntu or Linux Mint release**.
 A Debian-built binary is not automatically compatible with every Ubuntu/Mint
 release. Keep outputs in separate distribution/version directories.
@@ -44,4 +50,4 @@ Reference: https://cmake.org/cmake/help/latest/cpack_gen/deb.html
 
 Use a fixed native distribution/release and recorded toolchain/dependency versions
 for repeatable builds. SOURCE_DATE_EPOCH records the release timestamp; byte-for-byte
-reproducibility and native installation have not yet been verified.
+reproducibility is not claimed; native userspace installation acceptance passed.

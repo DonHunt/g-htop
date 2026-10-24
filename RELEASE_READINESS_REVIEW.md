@@ -29,11 +29,17 @@ retain attribution and distinguish the free Community edition from commercial Pr
 
 ## Limits
 
-Only Manjaro x86_64 binary acceptance is claimed. User namespaces are not booted
+Binary acceptance covers current Manjaro x86_64, Ubuntu 22.04 amd64 DEB,
+Fedora 43 x86_64 RPM and Ubuntu-built AppImage launches on all three runtimes. User namespaces are not booted
 or independent distro tests; older rolling libraries may be incompatible. Owner
 reported NVIDIA/Intel hardware testing precedes this release; current fixture
 checks are not broad physical certifications. Telemetry depends on driver support.
 No per-process GPU/VRAM attribution; socket ownership can be inaccessible and
-systemd service discovery covers loaded units. DEB/RPM are source-only; no
-AppImage, other-architecture or non-Linux binary is offered. No bit-for-bit
+systemd service discovery covers loaded units. Additional DEB/RPM fresh install, baseline upgrade, installed launch and removal
+passed in native userspaces. No other-architecture or non-Linux binary is offered.
+AppImage uses X11/XWayland; exact scope is in the release PLATFORMS.md. No bit-for-bit
 native rebuild or system-health guarantee is made.
+
+The additional formats were published after the original application source freeze.
+The v1.1.0 application tag/source and Arch assets remain unchanged. Current release
+platform notes and checksums cover the added binaries and runtime source bundle.

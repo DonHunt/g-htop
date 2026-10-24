@@ -20,5 +20,8 @@ package, release notes and pinned recipe are covered by SHA256SUMS.
 Acceptance requires native regression tests, GPU/About GTK checks, a live desktop
 launch, actual isolated package install/upgrade/removal, final diff/content review,
 and verification of the published commit/tag and downloaded release assets.
-Only the Manjaro-tested x86_64 Arch-format binary is in scope. DEB/RPM source
-recipes remain unverified; no AppImage or other platform binary is advertised.
+Additional v1.1.0 formats were authorized after the initial Arch-only source freeze:
+Ubuntu 22.04 DEB, Fedora 43 RPM, and Ubuntu-built AppImage. Native package
+installation/upgrade/removal and AppImage launches passed in the stated runtimes.
+Current release PLATFORMS.md supersedes initial bundled packaging-status text.
+The application tag/source and Arch package are unchanged.

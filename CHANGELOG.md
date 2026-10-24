@@ -14,8 +14,14 @@
 - Updated source/package version metadata and current release documentation to 1.1.0.
 - Preserved the Apache License, Version 2.0. No Pro application or licensing modules ship.
 
-Verified binary format: Arch/Manjaro x86_64 package. DEB/RPM/AppImage and other
-platform binaries are not offered or claimed as tested.
+### Additional v1.1.0 package formats
+
+- Added independently built Ubuntu 22.04 DEB and Fedora 43 RPM binaries.
+- Added a GTK/gtkmm AppImage built on Ubuntu 22.04 and tested on Manjaro, Ubuntu and Fedora.
+- Verified native fresh installs, baseline upgrades, installed launches and removals;
+  retained the original application tag/source and Arch binary unchanged.
+- Added platform notes, corresponding AppImage runtime sources and extended checksums.
+- Updated current download documentation; other architectures/non-Linux remain unsupported.
 
 ## 0.1.0 — initial release
 

@@ -1,7 +1,12 @@
-# RPM packaging — CONFIGURATION ONLY, NATIVE BUILD UNVERIFIED
+# RPM packaging — v1.1.0 NATIVE BUILD VERIFIED
 
-No RPM has been produced. There is no Fedora/RPM target environment or rpmbuild
-here. Build from a fresh source tree inside the intended Fedora release. Other
+The v1.1.0 RPM binary was built and verified in an isolated Fedora 43 x86_64 userspace.
+Fresh installation, upgrade from a rebuilt Community 0.1.0 baseline, installed
+launch/About/navigation, removal and user-data preservation passed. This shares
+the host kernel/display and does not certify all distributions using this format.
+See the GitHub release PLATFORMS.md for current download and compatibility details.
+
+The release RPM was compiled in a Fedora userspace with native rpmbuild/dependency scanning. Build from a fresh source tree inside the intended Fedora release. Other
 RPM distributions require their own native build/dependency/launch verification;
 RPM format alone does not establish compatibility. Keep outputs per target.
 
@@ -45,4 +50,4 @@ Reference: https://cmake.org/cmake/help/latest/cpack_gen/rpm.html
 
 Use a fixed native distribution/release and recorded toolchain/dependency versions
 for repeatable builds. SOURCE_DATE_EPOCH records the release timestamp; byte-for-byte
-reproducibility and native installation have not yet been verified.
+reproducibility is not claimed; native userspace installation acceptance passed.

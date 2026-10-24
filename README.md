@@ -123,27 +123,41 @@ Community distribution.
 
 Source and releases: https://github.com/DonHunt/g-htop
 
-## Additional DEB/RPM release preparation
+## DEB, RPM and AppImage
 
-Native DEB and RPM configurations and build instructions are in `packaging/cpack`,
-`packaging/deb` and `packaging/rpm`. These targets are **not built or verified**.
-Only the current Manjaro x86_64 runtime has been used for binary acceptance.
-Maintainer: Donald E. Hunt <g_htop@don-hunt.com> (the shared CPack default).
-Build on each intended distribution/release;
-a CPack guard rejects packaging a Manjaro-configured binary as DEB/RPM. Native
-ELF scans determine actual library dependencies. No DEB, RPM or AppImage binary is offered in v1.1.0. No Windows, macOS or
-other non-Linux binary is offered.
+The [v1.1.0 GitHub Release](https://github.com/DonHunt/g-htop/releases/tag/v1.1.0)
+provides the source archive, Arch/Manjaro package, Ubuntu-built DEB, Fedora-built RPM,
+and portable AppImage, plus checksums and tested-platform notes.
 
-The v1.1.0 release assets are the source archive, verified
-Arch/Manjaro x86_64 1.1.0-1 package, checksum-pinned PKGBUILD, release notes and
-SHA256SUMS. Download them from the GitHub v1.1.0 release. Source contains both Stage 10 documents and all native packaging
-configurations. Superseded artifacts are preserved locally under
-`dist/historical/` and are not intended for publication.
+| Format | Verified build/runtime | File |
+| --- | --- | --- |
+| Arch/Manjaro | Current Manjaro x86_64 | `g_htop-1.1.0-1-x86_64.pkg.tar.zst` |
+| DEB | Ubuntu 22.04 amd64 | `g-htop_1.1.0-1_amd64.deb` |
+| RPM | Fedora 43 x86_64 | `g_htop-1.1.0-1.x86_64.rpm` |
+| AppImage | Ubuntu build; tested on Manjaro, Ubuntu 22.04, Fedora 43 | `G_htop-1.1.0-x86_64.AppImage` |
 
-The Git repository contains source and packaging recipes, not generated release
-archives or binaries. `.gitattributes` excludes the finalized Arch PKGBUILD from
-the source export because it hashes that archive; its template remains inside.
-Use the pinned recipe supplied beside the final archive to reproduce the package.
+```sh
+sudo apt install ./g-htop_1.1.0-1_amd64.deb
+sudo dnf install ./g_htop-1.1.0-1.x86_64.rpm
+chmod +x ./G_htop-1.1.0-x86_64.AppImage
+./G_htop-1.1.0-x86_64.AppImage
+# If FUSE mounting is unavailable:
+APPIMAGE_EXTRACT_AND_RUN=1 ./G_htop-1.1.0-x86_64.AppImage
+```
+
+Verify `SHA256SUMS` first and close running Community instances before upgrading.
+DEB/RPM installation, baseline upgrade, launch and removal were verified in isolated
+native userspaces with the host kernel/display. AppImage bundles GTK/gtkmm libraries
+from Ubuntu 22.04 and uses X11/XWayland; it retains host glibc and monitoring helpers.
+Distribution compatibility depends on native dependencies; no every-distribution or
+other-architecture claim is made. `PLATFORMS.md` on the release gives exact scope.
+Corresponding AppImage runtime sources and third-party notices are supplied.
+
+Native recipes are in `packaging/cpack`, `packaging/deb` and `packaging/rpm`; their
+host-family guard prevents relabeling a Manjaro binary as a native DEB/RPM.
+The v1.1.0 tag and original source/Arch assets remain unchanged. Additional formats
+were published after that source freeze; current release platform notes supersede
+the initial bundled Arch-only packaging-status paragraphs.
 
 ## Development methodology
 

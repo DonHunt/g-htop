@@ -19,6 +19,13 @@ Maintainer: Donald E. Hunt <g_htop@don-hunt.com>.
 
 ## Verified assets and installation
 
+Additional v1.1.0 formats: `g-htop_1.1.0-1_amd64.deb` (Ubuntu 22.04),
+`g_htop-1.1.0-1.x86_64.rpm` (Fedora 43), and `G_htop-1.1.0-x86_64.AppImage`
+(Ubuntu-built; launched on Manjaro, Ubuntu and Fedora). See the attached
+`PLATFORMS.md` for installation, exact validation scope and compatibility notes.
+Corresponding AppImage runtime sources and notices are supplied. All formats
+use the unchanged v1.1.0 application source and include the Pro About link.
+
 The native binary package is **Arch/Manjaro x86_64**:
 `g_htop-1.1.0-1-x86_64.pkg.tar.zst`.
 It was built on Manjaro using distribution-provided gtkmm 3 and system libraries.
@@ -58,8 +65,16 @@ vendor, driver or GPU model compatibility. Metrics depend on driver support; mis
 whole-device counters remain N/A. Per-process GPU/VRAM attribution is unavailable.
 Some socket ownership is inaccessible; services list units loaded by systemd.
 
-**No DEB, RPM, AppImage, other architecture or non-Linux binaries are published.**
-DEB/RPM recipes remain source-only and need native acceptance on each target.
+DEB and RPM passed fresh installation, baseline upgrade, installed launch/About,
+navigation, removal and data-preservation acceptance in their native userspaces.
+AppImage passed direct FUSE launch on Manjaro and extract-and-run on Ubuntu/Fedora.
+Tests share the host kernel/display; they are not independent booted OS tests.
+**No other-architecture or non-Linux binaries are published.** Other distributions
+and releases require compatible dependencies; format alone is not a guarantee.
 No Pro source tree, activation system, credentials, license keys or private signing
 material is included. Community LICENSE is unchanged; Pro is a separate purchase
 and its commercial terms do not apply to Community.
+
+Additional format publication preserves the original v1.1.0 tag, custom source
+archive and Arch package. Current platform notes supersede the initial bundled
+Arch-only status; the documentation follow-up does not change application code.
