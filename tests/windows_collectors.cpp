@@ -2,12 +2,19 @@
 #include "gpu_data.hpp"
 #include "platform/cpu.hpp"
 #include "platform/process.hpp"
+#include "platform/windows/runtime.hpp"
 #include "service_data.hpp"
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <thread>
 int main() {
+  monitoring::win::configure_runtime();
+  if (monitoring::win::running_under_wine()) {
+    assert(std::string(g_getenv("PANGOCAIRO_BACKEND")) == "fontconfig");
+    const auto config = std::string(g_getenv("FONTCONFIG_FILE"));
+    assert(config.find("fonts-wine.conf") != std::string::npos);
+  }
   std::atomic<bool> stop{false};
   std::string errors;
   monitoring::ProcessCollector processes;

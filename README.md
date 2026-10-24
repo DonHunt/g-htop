@@ -12,8 +12,10 @@ packaging and testing instructions. No Windows download is advertised yet.
 
 The UI, layout, shared GPU colors and About/Pro link are shared across both
 platforms. Windows uses native process, service, PDH, DXGI and IP Helper APIs;
-metrics unavailable from Windows or a driver show N/A. The detailed Linux
-behavior and build instructions below remain applicable to Linux.
+metrics unavailable from Windows or a driver show N/A. Wine automatically uses the packaged font configuration for readable text.
+Windows CPU/GPU counters unavailable in Wine remain N/A; the GPU chart explains
+that native Windows testing is required. The detailed Linux behavior and build
+instructions below remain applicable to Linux.
 
 ## Screenshots (Linux)
 

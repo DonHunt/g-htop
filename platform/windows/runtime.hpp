@@ -25,5 +25,11 @@ inline void configure_runtime() {
   set("GDK_PIXBUF_MODULE_FILE",
       root / "lib/gdk-pixbuf-2.0/2.10.0/loaders.cache");
   g_setenv("GDK_BACKEND", "win32", TRUE);
+  // Wine's Win32 font backend can produce clipped glyphs. Use the packaged
+  // Fontconfig configuration there; native Windows keeps its normal backend.
+  if (running_under_wine()) {
+    g_setenv("PANGOCAIRO_BACKEND", "fontconfig", TRUE);
+    set("FONTCONFIG_FILE", root / "etc/fonts/fonts-wine.conf");
+  }
 }
 } // namespace monitoring::win

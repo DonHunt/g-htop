@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
   auto extra = c;
   extra.identity = "extra"; extra.name = "Additional GPU"; extra.usage = std::nan("");
   graph.append_sample({a,b,c,d,extra});
+  assert(graph.telemetry_status().empty());
   Gtk::Window window;
   window.set_title("Community shared GPU panel — synthetic mixed-vendor fixture");
   window.set_default_size(600,330);
@@ -39,8 +40,15 @@ int main(int argc, char** argv) {
   auto timer = Glib::signal_timeout().connect([&] {
     auto surface = window.get_window();
     assert(surface);
-    if (!g_getenv("G_HTOP_TEST_NO_SCREENSHOT")) Gdk::Pixbuf::create(surface,0,0,window.get_allocated_width(),window.get_allocated_height())->save((out/(stage == 0 ? "mixed-gpus.png" : "no-gpu.png")).string(),"png");
-    if (stage++ == 0) {graph.append_sample({}); assert(graph.series_count() == 0); return true;}
+    if (!g_getenv("G_HTOP_TEST_NO_SCREENSHOT")) Gdk::Pixbuf::create(surface,0,0,window.get_allocated_width(),window.get_allocated_height())->save((out/(stage == 0 ? "mixed-gpus.png" : stage == 1 ? "unavailable.png" : "no-gpu.png")).string(),"png");
+    if (stage == 0) {
+      graph.append_sample({d});
+#ifdef _WIN32
+      assert(!graph.telemetry_status().empty());
+#endif
+      ++stage; return true;
+    }
+    if (stage++ == 1) {graph.append_sample({}); assert(graph.series_count() == 0); assert(graph.telemetry_status().empty()); return true;}
     window.hide(); return false;
   },300);
   app->run(window); timer.disconnect();

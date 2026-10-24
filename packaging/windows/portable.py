@@ -171,3 +171,7 @@ shutil.copy2(
 )
 (out / "DLL-IMPORTS.json").write_text(json.dumps(imports, indent=2) + "\n")
 print(out)
+
+fonts = out / "etc/fonts"
+fonts.mkdir(parents=True, exist_ok=True)
+shutil.copy2(source / "packaging/windows/fonts-wine.conf", fonts / "fonts-wine.conf")

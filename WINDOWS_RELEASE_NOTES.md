@@ -32,11 +32,17 @@ all tabs and F11 fullscreen toggling. The Pro URL returned HTTP 200. Linux passe
 12 collector CTest cases plus graph/About GTK regression. Exact source revision
 and artifacts are recorded in the candidate build manifest.
 
-Wine visual QA used Pango's fontconfig backend because Wine's Win32 font path
-rendered damaged glyphs. Native Windows uses its normal font backend. Simulated
-Escape/Alt+F4 delivery was unreliable in Wine; shutdown was verified through the
-normal window-manager close request. Native Windows keyboard handling, fonts,
-scaling, hardware telemetry and multi-GPU accuracy still require owner testing.
+The corrected candidate detects Wine automatically and uses its packaged
+Fontconfig configuration for readable text when launched from either the EXE or
+CMD file. No external font environment settings are required. Native Windows
+continues to use its normal Win32 font backend.
+
+Wine 11.17 returns `PDH_CSTATUS_NO_COUNTER` for the Windows CPU and GPU counter
+paths used here. DXGI can detect a GPU while its utilization remains N/A. The
+chart now explains this state and directs hardware validation to native Windows
+11; a detected adapter alone does not provide graph data. Missing values remain
+N/A, rather than being plotted as zero. Native Windows font/scaling, hardware
+telemetry and keyboard behavior still require owner testing.
 
 ## Genuine limitations
 

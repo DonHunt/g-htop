@@ -12,6 +12,10 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 namespace monitoring::win {
+inline bool running_under_wine() {
+  const auto ntdll = GetModuleHandleW(L"ntdll.dll");
+  return ntdll && GetProcAddress(ntdll, "wine_get_version") != nullptr;
+}
 class Handle {
   HANDLE value_;
 

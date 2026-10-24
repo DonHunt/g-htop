@@ -107,13 +107,17 @@ No vendor utility, PowerShell, WMIC or manual manufacturer selection is needed.
 - Missing icons/images: retain `share`, `lib`, the relative loaders cache and all
   imported DLLs. Confirm the package still works after moving it to a folder
   containing spaces and non-ASCII characters, launched from a different cwd.
-- Wine: set `GDK_BACKEND=win32`, remove inherited Linux GTK module settings,
-  and use an isolated `WINEPREFIX`. Never use Wine GPU values as native proof.
-  Wine 11.17 showed damaged glyphs with Pango's Win32 font backend in this
-  environment. Visual QA used `PANGOCAIRO_BACKEND=fontconfig` and an isolated
-  Fontconfig file pointing to the workstation's fonts. This QA setting is not
-  embedded in the application or required on native Windows. Native Windows
-  rendering/scaling must still be checked.
+- Wine: the EXE detects Wine and automatically selects Fontconfig with the
+  packaged `etc/fonts/fonts-wine.conf`. This avoids Wine's damaged Win32 glyphs
+  for both EXE and CMD launches, without external font environment settings.
+  The configuration uses Wine/Windows font folders and standard Linux font
+  directories through Wine's Z: drive. Keep `etc` with the extracted package.
+  Native Windows retains its normal Win32 font backend.
+- Wine 11.17 returned `PDH_CSTATUS_NO_COUNTER` for the CPU and GPU performance
+  counter paths. GPU discovery can still name an adapter, but there are no
+  utilization measurements to plot. The chart explicitly identifies that
+  unavailable state. Validate real CPU/GPU telemetry on native Windows 11;
+  the application does not replace missing measurements with invented zeros.
 - The focused GTK test tools capture screenshots by default. On older Cairo
   backends that fail while capturing a window, set `G_HTOP_TEST_NO_SCREENSHOT=1`
   and use an external capture tool; all functional assertions still run.
