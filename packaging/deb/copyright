@@ -2,7 +2,7 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: G_htop Community
 Upstream-Contact: Donald E. Hunt <g_htop@don-hunt.com>
 Comment: Copyright © 2026 Donald E. Hunt.
- This Community distribution does not include a future separately developed Pro edition.
+ This Community distribution does not include the separately purchased Pro edition.
 
 Files: *
 Copyright: © 2026 Donald E. Hunt

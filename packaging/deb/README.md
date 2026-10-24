@@ -8,7 +8,7 @@ release. Keep outputs in separate distribution/version directories.
 
 Build prerequisites on the target: build-essential, cmake, pkg-config,
 libgtkmm-3.0-dev, dpkg-dev. Runtime helpers are systemd, iproute2, coreutils and
-hicolor-icon-theme. pciutils is optional for descriptive GPU names. CPack's
+hicolor-icon-theme. hwdata is optional for descriptive GPU names. CPack's
 `dpkg-shlibdeps` scan derives actual gtkmm/GTK, glibc and C++ runtime dependencies
 from the target build; it handles release-specific runtime package names rather
 than hardcoding Manjaro library requirements. No library bundles are supplied.
@@ -37,7 +37,7 @@ Before marking a target verified, inspect `dpkg-deb --info` and `dpkg-deb --cont
 check the installed dependency list and launch on that target. The package uses
 `/usr/bin/G_htop`, a freedesktop desktop entry/icon, documentation and licenses;
 it also installs `/usr/share/doc/g-htop/copyright`. No root is needed to build.
-After review, install with `sudo apt install ./g-htop_0.1.0-1_*.deb` and remove
+After review, install with `sudo apt install ./g-htop_1.1.0-1_*.deb` and remove
 with `sudo apt remove g-htop`. No installation is performed by these build commands.
 
 Reference: https://cmake.org/cmake/help/latest/cpack_gen/deb.html

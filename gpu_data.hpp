@@ -1,4 +1,6 @@
 #include "presentation.hpp"
+#include "gpu/enumerate_gpu.hpp"
+#include "gpu/nvml_gpu.hpp"
 #pragma once
 
 #include <algorithm>
@@ -16,124 +18,48 @@
 #include <string>
 #include <vector>
 
-struct GpuDevice {
-  std::string card, path, name;
-};
-
-std::vector<GpuDevice> discover_gpus() {
-  std::vector<GpuDevice> gpus;
-  std::error_code ec;
-  if (!std::filesystem::exists("/sys/class/drm", ec))
-    return {};
-
-  std::regex card_regex(R"(card\d+$)");
-  std::set<std::string> seen_paths;
-
-  for (const auto &entry :
-       std::filesystem::directory_iterator("/sys/class/drm", ec)) {
-    if (ec)
-      continue;
-    const auto &path = entry.path();
-    if (!std::filesystem::is_symlink(path, ec))
-      continue;
-    if (!std::regex_match(path.filename().string(), card_regex))
-      continue;
-
-    std::error_code symlink_ec;
-    auto driver_path =
-        std::filesystem::read_symlink(path / "device" / "driver", symlink_ec);
-    if (symlink_ec || driver_path.filename() != "amdgpu")
-      continue;
-
-    auto canonical_path = std::filesystem::canonical(path / "device", ec);
-    if (ec)
-      continue;
-    if (!seen_paths.insert(canonical_path.string()).second)
-      continue;
-
-    GpuDevice gpu;
-    gpu.path = canonical_path.string();
-    gpu.card = path.filename().string();
-
-    std::string bdf = canonical_path.filename().string();
-    std::smatch match;
-    if (std::regex_match(
-            bdf, match,
-            std::regex(
-                R"([0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7])"))) {
-      FILE *pipe =
-          popen(("LC_ALL=C timeout 2s lspci -D -s " + bdf).c_str(), "r");
-      if (pipe) {
-        std::string line;
-        char buffer[512];
-        while (fgets(buffer, sizeof(buffer), pipe)) {
-          line += buffer;
-        }
-        auto pos = line.find(": ");
-        if (pos != std::string::npos) {
-          gpu.name = line.substr(pos + 2);
-          while (!gpu.name.empty() &&
-                 (gpu.name.back() == '\n' || gpu.name.back() == '\r')) {
-            gpu.name.pop_back();
-          }
-        }
-        pclose(pipe);
-      }
-    }
-
-    if (gpu.name.empty()) {
-      gpu.name = "AMD GPU";
-    }
-
-    gpus.push_back(gpu);
-  }
-
-  return gpus;
+using GpuDevice = community::gpu::Device;
+inline std::vector<GpuDevice> discover_gpus(
+    const std::filesystem::path& drm="/sys/class/drm",
+    const std::filesystem::path& pci="/sys/bus/pci/devices",
+    const std::filesystem::path& database="/usr/share/hwdata/pci.ids") {
+  return community::gpu::enumerate(drm,pci,database);
 }
 
-std::optional<unsigned long long> gpu_value(const std::string &path) {
-  std::ifstream file(path);
-  if (!file.is_open() || !file.good())
-    return std::nullopt;
-
-  std::string value_str;
-  file >> value_str;
-  if (value_str.empty() ||
-      !std::all_of(value_str.begin(), value_str.end(), ::isdigit))
-    return std::nullopt;
-
-  try {
-    return std::stoull(value_str);
-  } catch (...) {
-    return std::nullopt;
-  }
+inline std::optional<unsigned long long> gpu_value(const std::string& path) {
+  return community::gpu::integer(path);
 }
 
 struct GpuReading {
     std::string name;
     double usage;
     std::string detail;
+    std::string identity;
 };
-std::string gpu_text(const std::vector<GpuDevice> &gpus,
-                     std::vector<GpuReading> *readings = nullptr) {
+inline std::string gpu_text(const std::vector<GpuDevice> &gpus,
+                     std::vector<GpuReading> *readings = nullptr,
+                     const community::gpu::Nvml* provider = nullptr) {
   if (readings != nullptr)
     readings->clear();
   if (gpus.empty())
-    return "AMD GPU: N/A | VRAM: N/A";
+    return "GPU: N/A — no readable PCI/DRM devices | VRAM: N/A";
 
   std::ostringstream oss;
   for (const auto &gpu : gpus) {
         std::string label = Ui::gpu_name(gpu.name) + " (" + gpu.card + ")";
-    auto busy = gpu_value(gpu.path + "/gpu_busy_percent");
-    if (readings) {
-      if (busy && *busy <= 100)
-        readings->push_back(
-            {label, static_cast<double>(*busy), gpu.name + " | " + gpu.card + " | " + gpu.path});
-      else
-        readings->push_back({label, -1.0, gpu.name + " | " + gpu.card + " | " + gpu.path});
+    auto metrics = community::gpu::read(gpu);
+    if (provider) {
+      // An old NVML UUID must never acquire a replacement's sysfs counters.
+      if (!gpu.uuid.empty() && provider->uuid_for(gpu) != gpu.uuid) metrics = {};
+      else provider->read_into(gpu, metrics);
     }
-    auto vram_total = gpu_value(gpu.path + "/mem_info_vram_total");
-    auto vram_used = gpu_value(gpu.path + "/mem_info_vram_used");
+    auto busy = metrics.utilization;
+    auto vram_total = metrics.total, vram_used = metrics.used;
+    if (readings) readings->push_back({label, busy ? *busy : -1.0,
+        gpu.name + " | Vendor: " + gpu.vendor + " | Driver: " +
+        (gpu.driver.empty() ? "unbound/unavailable" : gpu.driver) + " | PCI: " +
+        gpu.pci_id + " | " + gpu.card + " | " + gpu.path,
+        community::gpu::identity_id(gpu)});
 
     oss << label << " | GPU: ";
     if (busy && *busy <= 100) {
@@ -141,6 +67,12 @@ std::string gpu_text(const std::vector<GpuDevice> &gpus,
     } else {
       oss << "N/A";
     }
+    oss << " | Temperature: ";
+    if (metrics.temperature) oss << std::fixed << std::setprecision(1) << *metrics.temperature << " °C";
+    else oss << "N/A";
+    oss << " | Device/package power: ";
+    if (metrics.power) oss << std::fixed << std::setprecision(1) << *metrics.power << " W";
+    else oss << "N/A";
     oss << "\n";
 
     oss << std::fixed << std::setprecision(1);

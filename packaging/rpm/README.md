@@ -7,7 +7,7 @@ RPM format alone does not establish compatibility. Keep outputs per target.
 
 Fedora build prerequisites: gcc-c++, cmake, make, pkgconf-pkg-config, gtkmm30-devel
 and rpm-build. Runtime helpers: systemd, iproute, coreutils and hicolor-icon-theme;
-pciutils is optional. CPack/rpmbuild automatic ELF dependency scanning adds actual
+hwdata is optional. CPack/rpmbuild automatic ELF dependency scanning adds actual
 library/SONAME and symbol requirements from the native target. gtkmm30 is an
 explicit runtime requirement; no Manjaro ABI strings or libraries are copied.
 
@@ -38,7 +38,7 @@ Before marking a target verified, inspect `rpm -qip`, `rpm -qlp`, and `rpm -qpR`
 and perform an installed launch on that target. Files use `/usr/bin/G_htop`, the
 standard desktop/icon locations, `/usr/share/doc/g_htop` and
 `/usr/share/licenses/g_htop`. Build without root. After review, install with
-`sudo dnf install ./g_htop-0.1.0-1.*.rpm` and remove with `sudo dnf remove g_htop`.
+`sudo dnf install ./g_htop-1.1.0-1.*.rpm` and remove with `sudo dnf remove g_htop`.
 No package installation is performed by the build commands.
 
 Reference: https://cmake.org/cmake/help/latest/cpack_gen/rpm.html

@@ -1,253 +1,160 @@
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <chrono>
+#include <cmath>
 #include <deque>
 #include <gtkmm/drawingarea.h>
+#include <map>
 #include <pango/pangocairo.h>
-#include <set>
 #include <string>
 #include <vector>
-
 #include "gpu_data.hpp"
 
+// One shared utilization plot; series belong to physical identities, not names.
 class GpuHistory : public Gtk::DrawingArea {
 public:
   GpuHistory() {
-    set_size_request(320, 240);
+    set_size_request(280, 160);
     set_hexpand(true);
     set_vexpand(true);
   }
 
-  void append_sample(const std::vector<GpuReading> &readings) {
-    auto now = std::chrono::steady_clock::now();
-    packets.push_back({now, readings});
-    while (!packets.empty() &&
-           std::chrono::duration<double>(now - packets.front().at).count() >
-               300.0)
-      packets.pop_front();
-    while (packets.size() > 152)
-      packets.pop_front();
+  static std::string series_key(const GpuReading& r) {
+    return r.identity.empty() ? r.name : r.identity;
+  }
+
+  void append_sample(const std::vector<GpuReading>& readings) {
+    const auto now = Clock::now();
+    std::map<std::string, Series> next;
+    for (const auto& r : readings) {
+      const auto key = series_key(r);
+      auto found = series_.find(key);
+      Series s = found == series_.end() ? Series{} : std::move(found->second);
+      if (!colors_.count(key)) colors_[key] = colors_.size();
+      s.reading = r;
+      s.points.push_back({now, r.usage});
+      while (!s.points.empty() &&
+             (std::chrono::duration<double>(now - s.points.front().at).count() > 300 ||
+              s.points.size() > 152)) s.points.pop_front();
+      next.emplace(key, std::move(s));
+    }
+    series_ = std::move(next);
+    // Only the legend grows, never one chart per GPU.
+    set_size_request(280, std::max(160, 80 + static_cast<int>(series_.size()) * 20));
     queue_draw();
   }
 
+  size_t sample_count() const {
+    size_t count = 0;
+    for (const auto& entry : series_) count = std::max(count, entry.second.points.size());
+    return count;
+  }
+  size_t series_count() const { return series_.size(); }
+  size_t series_sample_count(const std::string& key) const {
+    auto it = series_.find(key);
+    return it == series_.end() ? 0 : it->second.points.size();
+  }
+  std::array<double, 3> series_color(const std::string& key) const {
+    // Golden-angle hues continue beyond the explicit high-contrast palette.
+    static constexpr std::array<std::array<double, 3>, 8> palette{{
+      {{0.0, 0.45, 0.70}}, {{0.90, 0.40, 0.0}}, {{0.0, 0.62, 0.45}},
+      {{0.80, 0.35, 0.65}}, {{0.55, 0.45, 0.0}}, {{0.30, 0.65, 0.85}},
+      {{0.80, 0.25, 0.20}}, {{0.50, 0.40, 0.80}}
+    }};
+    const auto index = colors_.at(key);
+    if (index < palette.size()) return palette[index];
+    const double hue = std::fmod((index - palette.size()) * 0.61803398875 + 0.08, 1.0) * 6;
+    const double x = 0.65 * (1 - std::abs(std::fmod(hue, 2.0) - 1));
+    const double m = 0.15;
+    switch (static_cast<int>(hue)) {
+      case 0: return {0.8, x + m, m};
+      case 1: return {x + m, 0.8, m};
+      case 2: return {m, 0.8, x + m};
+      case 3: return {m, x + m, 0.8};
+      case 4: return {x + m, m, 0.8};
+      default: return {0.8, m, x + m};
+    }
+  }
+
 protected:
-  bool on_draw(const Cairo::RefPtr<Cairo::Context> &cr) override {
-    auto allocation = get_allocation();
-    int w = allocation.get_width();
-    int h = allocation.get_height();
-
-    if (w < 100 || h < 100) {
-      draw_text(cr, "GPU utilization — last 5 minutes", 10, 10);
+  bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr) override {
+    const int w = get_allocated_width(), h = get_allocated_height();
+    get_style_context()->render_background(cr, 0, 0, w, h);
+    text(cr, "GPU utilization — last 5 minutes", 10, 6);
+    const double top = 32 + 20 * series_.size(), bottom = h - 26;
+    int row = 30;
+    unsigned gpu_number = 0;
+    for (const auto& entry : series_) {
+      const auto color = series_color(entry.first);
+      cr->set_source_rgb(color[0], color[1], color[2]);
+      cr->set_line_width(3);
+      cr->move_to(10, row + 8); cr->line_to(30, row + 8); cr->stroke();
+      const auto& r = entry.second.reading;
+      text(cr, "GPU " + std::to_string(++gpu_number) + ": " + r.name + " | " +
+           (valid(r.usage) ? Ui::percent(r.usage) : "N/A"), 38, row);
+      row += 20;
+    }
+    if (series_.empty()) {
+      text(cr, "GPU: N/A — no detected devices", 10, 32);
       return true;
     }
-
-    render_background(cr, 0, 0, w, h);
-
-    auto fg_color = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
-Gdk::RGBA accent_color;
-if (!get_style_context()->lookup_color("theme_selected_bg_color", accent_color)) {
-  accent_color = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
-}
-accent_color.set_alpha(1.0);
-
-Gdk::RGBA background;
-if (!get_style_context()->lookup_color("theme_bg_color", background)) {
-  background = get_style_context()->get_background_color(Gtk::STATE_FLAG_NORMAL);
-}
-
-auto luminance = [](const Gdk::RGBA& color) -> double {
-  auto channel = [](double v) -> double { return v <= 0.04045 ? v / 12.92 : std::pow((v + 0.055) / 1.055, 2.4); };
-  return 0.2126 * channel(color.get_red()) + 0.7152 * channel(color.get_green()) + 0.0722 * channel(color.get_blue());
-};
-
-double lumaAccent = luminance(accent_color);
-double lumaBg = luminance(background);
-double contrast = (std::max(lumaAccent, lumaBg) + 0.05) / (std::min(lumaAccent, lumaBg) + 0.05);
-
-if (contrast < 3.0) {
-  accent_color = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
-}    cr->set_source_rgba(fg_color.get_red(), fg_color.get_green(),
-                        fg_color.get_blue(), 0.15);
-    draw_grid(cr, w, h);
-
-    cr->set_source_rgba(fg_color.get_red(), fg_color.get_green(),
-                        fg_color.get_blue(), 1.0);
-    draw_text(cr, "GPU utilization — last 5 minutes", 10, 10);
-
-    std::set<std::string> series_names;
-    for (const auto &packet : packets) {
-      for (const auto &reading : packet.readings) {
-        if (reading.usage >= 0 && reading.usage <= 100) {
-          series_names.insert(reading.name);
+    if (w < 100 || bottom - top < 20) return true;
+    auto y = [&](double usage) { return bottom - (bottom - top) * usage / 100.0; };
+    const auto fg = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgba(fg.get_red(), fg.get_green(), fg.get_blue(), 0.18);
+    cr->set_line_width(1);
+    for (int i = 0; i <= 100; i += 25) {
+      cr->move_to(48, y(i)); cr->line_to(w - 12, y(i));
+    }
+    for (int i = 0; i <= 5; ++i) {
+      double x = 48 + (w - 60) * i / 5.0;
+      cr->move_to(x, top); cr->line_to(x, bottom);
+    }
+    cr->stroke();
+    for (int i = 0; i <= 100; i += 25) text(cr, std::to_string(i) + "%", 2, y(i) - 8);
+    for (int i = 0; i <= 5; ++i) {
+      double x = 48 + (w - 60) * i / 5.0;
+      text(cr, i == 5 ? "Now" : "-" + std::to_string(5 - i) + "m", x - (i == 5 ? 26 : 12), bottom + 5);
+    }
+    cr->save(); cr->rectangle(47, top - 2, w - 58, bottom - top + 4); cr->clip();
+    const auto now = Clock::now();
+    for (const auto& entry : series_) {
+      const auto color = series_color(entry.first);
+      cr->set_source_rgb(color[0], color[1], color[2]); cr->set_line_width(2);
+      bool started = false;
+      for (const auto& point : entry.second.points) {
+        double age = std::chrono::duration<double>(now - point.at).count();
+        if (!valid(point.usage) || age > 300 || age < 0) {
+          cr->stroke(); started = false; continue;
         }
+        double x = 48 + (w - 60) * (1 - age / 300.0);
+        if (!started) {
+          // A lone measurement is visible, including a genuine zero.
+          cr->arc(x, y(point.usage), 2, 0, 6.283185307); cr->fill();
+          cr->move_to(x, y(point.usage)); started = true;
+        } else cr->line_to(x, y(point.usage));
       }
+      cr->stroke();
     }
-
-    int legend_y = 34;
-    Gdk::RGBA legend_color = accent_color;
-    for (const auto &name : series_names) {
-      draw_legend(cr, name, legend_color, legend_y);
-      legend_y += 20;
-      legend_color = get_next_accent_color(legend_color);
-    }
-
-    if (packets.empty() ||
-        std::none_of(packets.back().readings.begin(),
-                     packets.back().readings.end(), [](const GpuReading &r) {
-                       return r.usage >= 0 && r.usage <= 100;
-                     })) {
-      draw_text(cr, "GPU: N/A — telemetry unavailable", w / 2 - 100, h / 2);
-      return true;
-    }
-
-    cr->set_line_width(2.0);
-
-    {
-      cr->save();
-      cr->rectangle(58, 60, w - 78, h - 98);
-      cr->clip();
-
-      for (const auto &name : series_names) {
-        cr->set_source_rgba(accent_color.get_red(), accent_color.get_green(),
-                            accent_color.get_blue(), accent_color.get_alpha());
-        cr->set_line_width(2);
-        cr->begin_new_path();
-        bool first = true;
-
-        for (const auto &packet : packets) {
-          auto age = std::chrono::duration<double>(
-                         std::chrono::steady_clock::now() - packet.at)
-                         .count();
-          auto it = std::find_if(
-              packet.readings.begin(), packet.readings.end(),
-              [&name](const GpuReading &r) { return r.name == name; });
-
-          if (it == packet.readings.end() || it->usage < 0 || it->usage > 100 ||
-              age < 0 || age > 300) {
-            cr->stroke();
-            first = true;
-            continue;
-          }
-
-          double x = map_x(w, packet.at);
-          double y = map_y(h, it->usage);
-
-          if (first) {
-            cr->move_to(x, y);
-            first = false;
-          } else {
-            cr->line_to(x, y);
-          }
-        }
-
-        cr->stroke();
-        accent_color = get_next_accent_color(accent_color);
-      }
-
-      cr->restore();
-    }
-
+    cr->restore();
     return true;
   }
 
 private:
-  struct Packet {
-    std::chrono::steady_clock::time_point at;
-    std::vector<GpuReading> readings;
-  };
-
-  std::deque<Packet> packets;
-
-  void render_background(const Cairo::RefPtr<Cairo::Context> &cr, int x, int y,
-                         int w, int h) {
-    get_style_context()->render_background(cr, x, y, w, h);
-  }
-
-  void draw_grid(const Cairo::RefPtr<Cairo::Context> &cr, int w, int h) {
-    auto grid_color = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
-    grid_color.set_alpha(0.15);
-    cr->set_source_rgba(grid_color.get_red(), grid_color.get_green(),
-                        grid_color.get_blue(), grid_color.get_alpha());
-    cr->set_line_width(1);
-
-    for (int i = 0; i <= 100; i += 25) {
-      double y = map_y(h, i);
-      cr->move_to(58, y);
-      cr->line_to(w - 20, y);
-    }
-
-    for (int i = 0; i <= 5; ++i) {
-      double x = 58 + (w - 78) * i / 5.0;
-      cr->move_to(x, 60);
-      cr->line_to(x, h - 38);
-    }
-
-    cr->stroke();
-
-    for (int i = 0; i <= 100; i += 25) {
-      double y = map_y(h, i);
-      draw_text(cr, std::to_string(i) + "%", 10, y - 8);
-    }
-
-    std::vector<std::string> xlabels = {"-5m", "-4m", "-3m",
-                                        "-2m", "-1m", "Now"};
-    for (int i = 0; i <= 5; ++i) {
-      double x = 58 + (w - 78) * i / 5.0;
-      draw_text(cr, xlabels[i], (i == 5) ? x - 30 : x - 14, h - 28);
-    }
-  }
-
-  void draw_legend(const Cairo::RefPtr<Cairo::Context> &cr,
-                   const std::string &name, const Gdk::RGBA &color, int y) {
-    cr->set_source_rgba(color.get_red(), color.get_green(), color.get_blue(),
-                        color.get_alpha());
-    cr->move_to(10, y + 8);
-    cr->line_to(30, y + 8);
-    cr->stroke();
-
-    if (!packets.empty()) {
-      auto it = std::find_if(
-          packets.back().readings.begin(), packets.back().readings.end(),
-          [&name](const GpuReading &r) { return r.name == name; });
-      if (it != packets.back().readings.end() && it->usage >= 0 &&
-          it->usage <= 100) {
-        draw_text(cr, name + " | " + Ui::percent(it->usage), 40, y);
-      } else {
-        draw_text(cr, name + " | N/A", 40, y);
-      }
-    } else {
-      draw_text(cr, name + " | N/A", 40, y);
-    }
-  }
-
-  void draw_text(const Cairo::RefPtr<Cairo::Context> &cr,
-                 const std::string &text, int x, int y) {
-    auto fg_color = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
-    cr->set_source_rgba(fg_color.get_red(), fg_color.get_green(),
-                        fg_color.get_blue(), fg_color.get_alpha());
-    auto layout = create_pango_layout(text);
-    layout->set_width(std::max(1, get_allocation().get_width() - x - 8) *
-                      Pango::SCALE);
+  using Clock = std::chrono::steady_clock;
+  struct Point { Clock::time_point at; double usage; };
+  struct Series { GpuReading reading; std::deque<Point> points; };
+  std::map<std::string, Series> series_;
+  std::map<std::string, size_t> colors_;
+  static bool valid(double usage) { return std::isfinite(usage) && usage >= 0 && usage <= 100; }
+  void text(const Cairo::RefPtr<Cairo::Context>& cr, const std::string& value, int x, int y) {
+    const auto fg = get_style_context()->get_color(Gtk::STATE_FLAG_NORMAL);
+    cr->set_source_rgba(fg.get_red(), fg.get_green(), fg.get_blue(), fg.get_alpha());
+    auto layout = create_pango_layout(value);
+    layout->set_width(std::max(1, get_allocated_width() - x - 6) * Pango::SCALE);
     layout->set_ellipsize(Pango::ELLIPSIZE_END);
-    cr->move_to(x, y);
-    layout->show_in_cairo_context(cr);
-  }
-
-  double map_x(int w, std::chrono::steady_clock::time_point at) {
-    auto age =
-        std::chrono::duration<double>(std::chrono::steady_clock::now() - at)
-            .count();
-    return 58 + (w - 78) * (1 - age / 300.0);
-  }
-
-  double map_y(int h, double usage) {
-    return h - 38 - (h - 98) * (usage / 100.0);
-  }
-
-  Gdk::RGBA get_next_accent_color(const Gdk::RGBA &current) {
-    Gdk::RGBA next;
-    next.set_rgba(current.get_green(), current.get_blue(), current.get_red(),
-                  1.0);
-    return next;
+    cr->move_to(x, y); layout->show_in_cairo_context(cr);
   }
 };

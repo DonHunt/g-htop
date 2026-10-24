@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(G_htop VERSION 0.1.0 LANGUAGES CXX)
+project(G_htop VERSION 1.1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(packaging/cpack/Packaging.cmake)
@@ -14,7 +14,8 @@ find_package(Threads REQUIRED)
 
 add_executable(G_htop main.cpp)
 
-target_link_libraries(G_htop PRIVATE PkgConfig::GTKMM Threads::Threads)
+target_link_libraries(G_htop PRIVATE PkgConfig::GTKMM Threads::Threads ${CMAKE_DL_LIBS})
+target_compile_definitions(G_htop PRIVATE G_HTOP_VERSION="${PROJECT_VERSION}")
 
 install(TARGETS G_htop
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -34,3 +35,30 @@ install(FILES README.md CHANGELOG.md LICENSES.md RELEASE_REVIEW.md
 
 install(FILES docs/STAGED_LOCAL_LLM_DEVELOPMENT.md docs/DEVELOPMENT_OVERVIEW.md
   DESTINATION ${CMAKE_INSTALL_DOCDIR}/docs)
+
+# Community hardware fixtures and focused GTK acceptance tools.
+include(CTest)
+if(BUILD_TESTING)
+  add_library(community_nvml_fixture SHARED tests/nvml_fixture.cpp)
+  add_executable(community_gpu_tests tests/gpu_tests.cpp)
+  target_include_directories(community_gpu_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(community_gpu_tests PRIVATE PkgConfig::GTKMM ${CMAKE_DL_LIBS})
+  target_compile_options(community_gpu_tests PRIVATE -UNDEBUG)
+  foreach(scenario amd-w5500 amd-wx3200 intel-integrated intel-discrete nvidia-nouveau nvidia-no-driver nvidia-professional missing-invalid replacement identity drm-pci-merge)
+    add_test(NAME community-${scenario} COMMAND community_gpu_tests ${scenario})
+  endforeach()
+  add_test(NAME community-nvml COMMAND community_gpu_tests nvml $<TARGET_FILE:community_nvml_fixture>)
+  add_executable(community_gpu_shared_panel tests/gpu_shared_panel.cpp)
+  target_include_directories(community_gpu_shared_panel PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(community_gpu_shared_panel PRIVATE PkgConfig::GTKMM ${CMAKE_DL_LIBS})
+  target_compile_options(community_gpu_shared_panel PRIVATE -UNDEBUG)
+  add_executable(community_about_test tests/about_test.cpp)
+  target_include_directories(community_about_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(community_about_test PRIVATE PkgConfig::GTKMM)
+  target_compile_definitions(community_about_test PRIVATE G_HTOP_VERSION="${PROJECT_VERSION}")
+  target_compile_options(community_about_test PRIVATE -UNDEBUG)
+  add_executable(community_gpu_gtk tests/gpu_gtk.cpp)
+  target_include_directories(community_gpu_gtk PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(community_gpu_gtk PRIVATE PkgConfig::GTKMM Threads::Threads ${CMAKE_DL_LIBS})
+  target_compile_options(community_gpu_gtk PRIVATE -UNDEBUG)
+endif()

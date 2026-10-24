@@ -35,7 +35,7 @@ inline std::string gpu_name(const std::string& detailed) {
         name.erase(name.find_last_not_of(" ") + 1); // Trim trailing spaces
         return "AMD " + name;
     } else {
-        return "AMD GPU";
+        return detailed.empty()?"GPU (model unavailable)":detailed;
     }
 }
 

@@ -20,6 +20,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "gpu_history.hpp"
 #include "dashboard.hpp"
+#include "about.hpp"
 #include <glibmm/main.h>
 #include <gtkmm/window.h>
 #include <gtkmm/box.h>
@@ -111,7 +112,7 @@ m_root.pack_start(m_notebook, Gtk::PACK_EXPAND_WIDGET);
 add(m_root);
 
 // Connect notebook signal_switch_page
-m_notebook.signal_switch_page().connect([this](Gtk::Widget* widget, guint page) {
+m_page_switch_connection = m_notebook.signal_switch_page().connect([this](Gtk::Widget* widget, guint page) {
   route_views(page);
 });
 
@@ -122,13 +123,21 @@ route_views(0);
 m_footer_label.set_ellipsize(Pango::ELLIPSIZE_END);
 
 // Connect m_gpu.signal_sample to GpuHistory::append_sample
-m_gpu.signal_sample().connect(sigc::mem_fun(m_history, &GpuHistory::append_sample));
+m_gpu.signal_sample().connect([this](const std::vector<GpuReading>& readings) {
+  m_history.append_sample(readings);
+  m_history.set_tooltip_text(m_gpu.get_text() + "\n" + m_gpu.get_tooltip_text());
+});
 
 // Connect m_gpu.signal_sample to lambda for status update
 m_gpu.signal_sample().connect([this](const std::vector<GpuReading>& values) {
   m_gpu_seen = true;
   m_gpu_valid = !values.empty() && std::all_of(values.begin(), values.end(), [](const GpuReading& r) { return r.usage >= 0 && r.usage <= 100; });
   update_status();
+});
+
+m_dashboard.about_button.signal_clicked().connect([this]() {
+  CommunityAboutDialog dialog(*this, G_HTOP_VERSION);
+  dialog.run();
 });
 
 // Connect reset_button clicked to m_dashboard.reset_layout
@@ -146,6 +155,8 @@ m_dashboard.fullscreen_button.signal_clicked().connect([this]() {
     }
 
     ~ProcessWindow() {
+    // Child teardown can switch notebook pages after their target boxes are gone.
+    m_page_switch_connection.disconnect();
     m_dashboard.save_layout();
         if (m_timeout_connection.connected()) {
             m_timeout_connection.disconnect();
@@ -195,12 +206,9 @@ void route_views(unsigned page) {
             place(m_vbox, m_dashboard.processes);
             place(m_services, m_dashboard.services);
             place(m_cpu, m_dashboard.cpu);
-            place(m_gpu, m_dashboard.gpu, false);
             place(m_history, m_dashboard.gpu);
             break;
         default:
-            place(m_gpu, m_root, false);
-            m_root.reorder_child(m_gpu, 0);
             place(m_vbox, m_process_page);
             place(m_services, m_service_page);
             place(m_cpu, m_cpu_page);
@@ -374,6 +382,7 @@ bool refresh() {
 
     ModelColumns m_columns;
     Gtk::Notebook m_notebook;
+    sigc::connection m_page_switch_connection;
 ServicesView m_services;
 Gtk::Box m_root{Gtk::ORIENTATION_VERTICAL};
 GpuSummary m_gpu;

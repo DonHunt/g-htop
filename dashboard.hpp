@@ -17,7 +17,7 @@ public:
 
 public:
     Gtk::Box processes, services, gpu, cpu;
-    Gtk::Button reset_button{"Reset Layout"}, fullscreen_button{"Full Screen (F11)"};
+    Gtk::Button reset_button{"Reset Layout"}, fullscreen_button{"Full Screen (F11)"}, about_button{"About"};
     StatusStrip status;
     int normal_width = 1200, normal_height = 800;
 
@@ -66,6 +66,7 @@ toolbar.set_spacing(8);
 toolbar.set_margin_top(4);
 toolbar.set_margin_bottom(4);toolbar.pack_start(reset_button, Gtk::PACK_SHRINK);
     toolbar.pack_start(fullscreen_button, Gtk::PACK_SHRINK);
+    toolbar.pack_end(about_button, Gtk::PACK_SHRINK);
 
     left.pack1(process_frame, true, false);
     left.pack2(service_frame, true, false);

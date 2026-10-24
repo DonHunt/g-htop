@@ -1,6 +1,6 @@
-# G_htop Community 0.1.0
+# G_htop Community Edition 1.1.0
 
-A read-only Linux process, service, and AMD GPU monitor using C++17 and gtkmm 3. It follows the desktop GTK theme.
+A read-only Linux process, service, CPU, network, and GPU monitor using C++17 and gtkmm 3. It follows the desktop GTK theme.
 
 ## Screenshots
 
@@ -18,32 +18,32 @@ In **Services**, choose All, Active, Inactive, or Failed. Click Description, Uni
 
 Discovery covers loaded service units, including loaded inactive units; installed units that systemd has not loaded are not enumerated. Aliases are deduplicated by canonical unit name within each scope. Query failures appear below the table; no root access is required. There are no service-management or process-termination controls. 
 
-The GPU summary above both tabs refreshes about every two seconds. It detects amdgpu devices through `/sys/class/drm`, showing each device separately with its name (when discoverable), GPU utilization, and used/total/available VRAM in MiB or GiB. Telemetry comes from `gpu_busy_percent`, `mem_info_vram_used`, and `mem_info_vram_total`; available VRAM is total minus used. Unreadable values display N/A. Device discovery and collection run in a background worker; no root access or GPU controls are required. GPU names use the already-installed `lspci` utility, with a generic fallback. Per-process GPU utilization and VRAM attribution are not implemented and display N/A. Restart the application after adding or removing a GPU.
+The shared GPU panel automatically detects AMD, NVIDIA and Intel PCI/DRM devices and refreshes about every two seconds. Each detected GPU has its own colored utilization line and compact legend in one five-minute graph. Device identity keeps same-model cards separate; colors and histories survive discovery reordering. Missing telemetry displays N/A and breaks the line; a genuine zero remains zero. Hover over the graph for full device identification, temperature, device/package power and used/total/available VRAM where the driver exposes them. Available VRAM is total minus used. GPU discovery runs in a background worker and refreshes automatically; replaced devices do not inherit an old card's history. No root access or GPU controls are required. Optional NVML uses an already-installed NVIDIA driver; no NVIDIA SDK or utility is bundled or required to launch. The optional `hwdata` PCI database supplies descriptive names. Per-process GPU utilization and VRAM attribution remain unavailable.
 
 The **CPU Threads** tab shows a wrapping grid of logical CPU meters. It reads `/proc/stat` approximately every two seconds and computes utilization from successive counter differences (idle includes I/O wait; guest time is not double-counted). The first sample and unavailable/reset counters show N/A. Bars are green at 0–33%, yellow above 33% and below 67%, and red at 67–100%; text and other controls keep the current GTK theme. Resize the window to change the number of meter columns; the panel scrolls for large CPU counts.
 
 The **Connections** tab lists TCP, TCP6, UDP, and UDP6 sockets in the current network namespace, including local/remote addresses and ports, socket states, and accessible owners. It queries the installed `ss` utility in a background worker approximately every two seconds without DNS lookups or root access. Filters are All, Listening (TCP LISTEN), Established (ss ESTAB, including connected UDP), and UDP. Click headings to sort; PIDs and ports sort numerically. Unknown/N/A ownership is normal for inaccessible processes and sockets without a live owner. Shared sockets may have one row per distinct owning PID; process/socket exits can race with collection. It has no disconnect, termination, or firewall controls.
 
-The **GPU History** tab plots the same AMD utilization samples used by the summary, approximately every two seconds. Its fixed 0–100% scale spans the last five minutes, with relative time markings from -5m to Now. History starts empty at launch and stays in memory only; unavailable readings show N/A and break the line. The GTK/Cairo `GpuHistory` widget accepts sample packets through `append_sample()` for reuse in a dashboard and has no telemetry timer of its own.
+The **GPU History** tab uses that same shared graph and worker, with a fixed 0–100% scale covering the last five minutes. History starts empty at launch and stays in memory only. No separate per-GPU panels are created.
 
 The initial **Dashboard** view combines Processes and Services on the left, with GPU History/VRAM and CPU Threads on the right. Drag the middle divider to resize the columns; each column has its own independent horizontal divider. Process and service tables scroll inside their panels. The original detailed tabs remain available and share the same widgets and sampling workers; filters, sorting, and history carry between views.
 
 Press **F11** or **Full Screen (F11)** to toggle full-screen Dashboard; **Escape** leaves full-screen. Move the normal window to another monitor using Cinnamon's usual window controls before entering full-screen. G_htop does not change monitor settings. Normal window dimensions and divider proportions are saved on close in `~/.config/G_htop/layout`; restoration clamps the layout to available space. **Reset Layout** balances the three dividers. The bottom dashboard strip stays outside the resizable panels and displays `/proc/uptime`, the number of failed services in the current system/user discovery cache, and detected service/GPU/VRAM availability issues. A count of zero is not a general system health assessment.
 
-Presentation follows the active GTK theme, with one-decimal percentages and MiB/GiB values, right-aligned numeric columns, and numeric sorting independent of display formatting. Hover over the compact GPU summary for full device identification. Long process and service descriptions use ellipses and full-name tooltips; Services places state and scope near the description, with further fields available by horizontal scrolling. CPU meters wrap more compactly. The status strip uses native informational/warning icons; a warning indicates a detected monitoring condition, not a general system health assessment.
+Presentation follows the active GTK theme, with one-decimal percentages and MiB/GiB values, right-aligned numeric columns, and numeric sorting independent of display formatting. Hover over the shared GPU graph for full telemetry and device identification. Long process and service descriptions use ellipses and full-name tooltips; Services places state and scope near the description, with further fields available by horizontal scrolling. CPU meters wrap more compactly. The status strip uses native informational/warning icons; a warning indicates a detected monitoring condition, not a general system health assessment.
 
 ## Linux requirements
 
-G_htop 0.1.0 supports Linux with readable `/proc`, C++17, CMake 3.16+, pkg-config,
+G_htop Community 1.1.0 supports Linux with readable `/proc`, C++17, CMake 3.16+, pkg-config,
 and gtkmm 3 (GTK 3). System/user services use `systemctl` from systemd; network
 connections use `ss` from iproute2; bounded helper calls use `timeout` from
-coreutils. AMD telemetry requires an accessible amdgpu DRM/sysfs device.
-`lspci` from pciutils is optional for descriptive GPU names. No root access is
+coreutils. GPU telemetry depends on accessible driver sysfs counters or optional NVIDIA NVML.
+The `hwdata` PCI database is optional for descriptive GPU names. No root access is
 needed for ordinary monitoring. No Windows, macOS or iOS edition is provided.
 
 On Arch/Manjaro, install build prerequisites through your normal package manager:
 `base-devel cmake pkgconf gtkmm3`. Runtime package dependencies are declared in
-`packaging/arch/PKGBUILD.in`; pciutils is optional. The desktop uses its existing
+`packaging/arch/PKGBUILD.in`; hwdata is optional. The desktop uses its existing
 GTK theme and icon infrastructure.
 
 ## Build and install from source
@@ -89,12 +89,12 @@ makepkg
 The source archive includes the PKGBUILD template. Its `@SOURCE_SHA256@` token is
 replaced with the completed archive's hash in the adjacent final PKGBUILD; the
 final PKGBUILD is outside the source archive to avoid a self-referential hash.
-The source is a local file; no unpublished repository URL is invented.
+The pinned recipe uses the custom source archive supplied with the GitHub release.
 
-Installation and upgrades (not performed during release preparation):
+Installation and upgrades:
 
 ```sh
-sudo pacman -U ./g_htop-0.1.0-2-x86_64.pkg.tar.zst
+sudo pacman -U ./g_htop-1.1.0-1-x86_64.pkg.tar.zst
 # Future upgrade: use pacman -U with the newer reviewed package.
 # Removal:
 sudo pacman -R g_htop
@@ -104,8 +104,8 @@ Do not manually delete package-managed files. User layout preferences are kept o
 removal. The packaged desktop ID is `org.ghtop.Monitor`; an existing development
 launcher with another ID is not overwritten. Both menu entries may be named
 G_htop. Close a running development instance before launching an installed copy,
-since GTK's application ID is shared. This preparation does not install over the
-development copy or change its launcher.
+since GTK's application ID is shared. Package acceptance uses disposable user namespaces and an isolated configuration;
+the host development copy and launcher are preserved.
 
 ## License and release review
 
@@ -114,25 +114,29 @@ Copyright © 2026 Donald E. Hunt. Copyright holder: Donald E. Hunt.
 G_htop Community is licensed under Apache License, Version 2.0; see LICENSE and
 NOTICE. Dependencies retain their own licenses (LICENSES.md). The copyright
 holder and Community license were explicitly confirmed by the project owner.
-This is an unpublished local review build; publication requires separate
-approval (RELEASE_REVIEW.md). A future separately developed G_htop Pro edition is
-not included, and no license for future Pro code is specified by this release.
-No other-platform edition is included.
+Community is free and open source. **About** includes a conventional link to
+[G_htop Pro](https://don-hunt.com/G_htopPro/), the separately purchased
+professional edition. Following the link opens your browser; it does not change
+Community features, collect license credentials, or require a purchase.
+Pro source code, commercial licensing and activation are not included in this
+Community distribution.
+
+Source and releases: https://github.com/DonHunt/g-htop
 
 ## Additional DEB/RPM release preparation
 
 Native DEB and RPM configurations and build instructions are in `packaging/cpack`,
 `packaging/deb` and `packaging/rpm`. These targets are **not built or verified**.
-No target-distribution environment is available on the development workstation.
+Only the current Manjaro x86_64 runtime has been used for binary acceptance.
 Maintainer: Donald E. Hunt <g_htop@don-hunt.com> (the shared CPack default).
 Build on each intended distribution/release;
 a CPack guard rejects packaging a Manjaro-configured binary as DEB/RPM. Native
-ELF scans determine actual library dependencies. No containers/toolchains have
-been installed and no package has been installed over the development app.
+ELF scans determine actual library dependencies. No DEB, RPM or AppImage binary is offered in v1.1.0. No Windows, macOS or
+other non-Linux binary is offered.
 
-The final release assets are in `dist/0.1.0`: one source archive, the corrected
-Arch/Manjaro 0.1.0-2 package, its checksum-pinned PKGBUILD, release notes and
-SHA256SUMS. Source contains both Stage 10 documents and all native packaging
+The v1.1.0 release assets are the source archive, verified
+Arch/Manjaro x86_64 1.1.0-1 package, checksum-pinned PKGBUILD, release notes and
+SHA256SUMS. Download them from the GitHub v1.1.0 release. Source contains both Stage 10 documents and all native packaging
 configurations. Superseded artifacts are preserved locally under
 `dist/historical/` and are not intended for publication.
 

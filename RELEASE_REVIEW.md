@@ -1,35 +1,24 @@
-# G_htop Community 0.1.0 — publication review
+# G_htop Community 1.1.0 — release review
 
-Copyright © 2026 Donald E. Hunt.
+Copyright © 2026 Donald E. Hunt. License: Apache-2.0.
 Maintainer: Donald E. Hunt <g_htop@don-hunt.com>.
-License: Apache-2.0; LICENSE is the complete unmodified license text.
 
-The owner confirmed identity, contact, copyright and Community licensing.
-NOTICE and LICENSES.md record attribution, provenance and its limits; upstream
-dependency licenses remain unchanged. A separately developed future Pro edition
-and non-Linux implementations are outside this release. No CLA or trademark
-policy is introduced.
+The owner explicitly authorized committing, pushing and publishing v1.1.0 to
+https://github.com/DonHunt/g-htop. The Community license text is unchanged.
 
-## Final local release
+Scope: existing Community source plus the reviewed Community GPU work, a conventional
+About link to the separately purchased Pro edition, version/package/documentation
+updates and a small notebook teardown correction. No commercial Pro application,
+licensing infrastructure, credentials, private keys, engineering state, delegation
+logs or unrelated workstation files belong in the public source or package.
 
-The final source snapshot includes both Stage 10 documents, standard CMake
-installation rules, desktop/icon assets, notices and Arch/DEB/RPM configurations.
-The corrected Arch package is 0.1.0-2; the application version remains 0.1.0.
-Final assets live in dist/0.1.0. Superseded packages and archives are retained in
-dist/historical and must not be presented as the final release.
+The source export is curated from tracked files. The final Arch PKGBUILD is
+export-ignored to avoid hashing the archive that includes it; its template is
+inside the source and the pinned recipe ships beside the archive. The archive,
+package, release notes and pinned recipe are covered by SHA256SUMS.
 
-DEB and RPM remain configuration-only: no native build, package installation or
-target launch has been verified. Their automatic dependency scans and host-family
-guards do not establish cross-release compatibility. No target environments or
-extra toolchains have been installed.
-
-The existing development executable and Cinnamon launcher are preserved.
-Release packaging is staged in a separate build tree and is not installed over
-the working application. See RELEASE_READINESS_REVIEW.md for acceptance gates.
-
-## Remaining publication decision
-
-The local repository has no remote and nothing has been uploaded or published.
-Select the intended public repository location and explicitly approve publication
-separately. Any future edits require refreshing the affected assets/checksums.
-No byte-identical native rebuild claim is made.
+Acceptance requires native regression tests, GPU/About GTK checks, a live desktop
+launch, actual isolated package install/upgrade/removal, final diff/content review,
+and verification of the published commit/tag and downloaded release assets.
+Only the Manjaro-tested x86_64 Arch-format binary is in scope. DEB/RPM source
+recipes remain unverified; no AppImage or other platform binary is advertised.

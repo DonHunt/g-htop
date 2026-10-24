@@ -1,37 +1,65 @@
-# G_htop Community 0.1.0 — final local release candidate
+# G_htop Community Edition v1.1.0
 
+Free, open-source Linux monitoring under the Apache License, Version 2.0.
 Copyright © 2026 Donald E. Hunt.
-Maintainer: Donald E. Hunt <g_htop@don-hunt.com>. License: Apache-2.0.
+Maintainer: Donald E. Hunt <g_htop@don-hunt.com>.
 
-Read-only Linux monitoring: Processes, system/user Services, CPU Threads,
-TCP/UDP Connections, AMD GPU/VRAM, five-minute GPU history, and a resizable
-four-panel Dashboard. F11/Escape, theme integration, saved layouts and
-secondary-monitor operation are retained. Both Stage 10 development-methodology
-documents are included. No application monitoring code was changed for this
-finalization.
+## Changes
 
-Final artifacts: G_htop-0.1.0.tar.gz, g_htop-0.1.0-2-x86_64.pkg.tar.zst,
-PKGBUILD, RELEASE_NOTES.md and SHA256SUMS. Check integrity with
-`sha256sum -c SHA256SUMS`. The package release increment corrects notices and
-documentation; the application version remains 0.1.0. The source archive
-corresponds to the reviewed Git source export; the finalized PKGBUILD is
-separate to avoid hashing itself. GitHub-generated source archives have different
-bytes and must not reuse the custom archive checksum.
+- **About** displays version 1.1.0 and links to https://don-hunt.com/G_htopPro/,
+  identifying G_htop Pro as the separately purchased professional edition.
+  Community features remain free and unrestricted; no advertising pop-up or activation was added.
+- Includes the completed Community GPU compatibility work: automatic AMD/NVIDIA/Intel
+  identification and optional read-only NVIDIA NVML telemetry.
+- One shared five-minute GPU graph uses distinct per-device colors and a compact legend.
+  Hover for detailed temperature, power and VRAM telemetry. Identical-model cards remain
+  separate, detection reorder preserves history, and missing counters remain N/A.
+- Preserves the general desktop dashboard and detailed tabs. Disconnects notebook routing
+  during teardown to resolve the previous shutdown warnings.
 
-Arch/Manjaro x86_64: built as an ordinary user and inspected without installation
-over the development application. After separate review, install/upgrade with
-`sudo pacman -U ./g_htop-0.1.0-2-x86_64.pkg.tar.zst`; remove with
-`sudo pacman -R g_htop`. Development executable and launcher remain unchanged.
+## Verified assets and installation
 
-DEB/RPM: source/configuration only, NOT BUILT or target-verified. Follow each
-native packaging README on its intended distribution/release. No Manjaro-built
-binary is offered as a Debian/Fedora package. Native dependency and installed
-launch checks remain necessary.
+The native binary package is **Arch/Manjaro x86_64**:
+`g_htop-1.1.0-1-x86_64.pkg.tar.zst`.
+It was built on Manjaro using distribution-provided gtkmm 3 and system libraries.
+Fresh install, upgrade from 0.1.0-2, installed launch and removal were checked using
+actual pacman transactions in disposable user namespaces with the host runtime/display.
+These are not separately booted distribution tests or a compatibility guarantee for
+older Arch libraries. No installation over the host application was performed.
 
-Known limits: no per-process GPU/VRAM attribution; some socket owners unavailable;
-service discovery covers loaded units; GPU hot-plug requires restart. No universal
-system-health or bit-reproducible build claim is made.
+Download the package and `SHA256SUMS` from this release, then verify before installing:
 
-Superseded artifacts under dist/historical are backups, not this release's assets.
-No public repository, upload, push, package installation or publication has
-occurred. Publication requires a separate owner decision.
+```sh
+# With all listed assets downloaded:
+sha256sum -c SHA256SUMS
+# Or verify only the downloaded binary package:
+grep '  g_htop-1.1.0-1-x86_64.pkg.tar.zst$' SHA256SUMS | sha256sum -c -
+sudo pacman -U ./g_htop-1.1.0-1-x86_64.pkg.tar.zst
+# Remove using the package manager; user preferences remain:
+sudo pacman -R g_htop
+```
+
+Also supplied: `G_htop-1.1.0.tar.gz`, a checksum-pinned `PKGBUILD`, these release notes,
+and `SHA256SUMS`. Extract the custom source archive next to the PKGBUILD or build
+with `makepkg` using the archive without extracting it first. CMake source build
+instructions are in README.md. The custom archive's checksum does not apply to
+GitHub-generated source ZIP/tar files. Dependencies and optional hwdata are not bundled.
+
+## Validation and limitations
+
+Release build and 12 native GPU regression scenarios; six GTK GPU scenarios; shared-panel
+identity/color/history/missing-data checks; About version/license and real link dispatch;
+live dual-AMD dashboard, tab navigation, saved layout and warning-free shutdown.
+The Pro website responded with HTTP 200 over HTTPS during release preparation.
+
+NVIDIA and Intel hardware testing was previously confirmed by the owner; current
+release checks use synthetic fixtures for those vendors and do not establish universal
+vendor, driver or GPU model compatibility. Metrics depend on driver support; missing
+whole-device counters remain N/A. Per-process GPU/VRAM attribution is unavailable.
+Some socket ownership is inaccessible; services list units loaded by systemd.
+
+**No DEB, RPM, AppImage, other architecture or non-Linux binaries are published.**
+DEB/RPM recipes remain source-only and need native acceptance on each target.
+No Pro source tree, activation system, credentials, license keys or private signing
+material is included. Community LICENSE is unchanged; Pro is a separate purchase
+and its commercial terms do not apply to Community.

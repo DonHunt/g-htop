@@ -1,6 +1,23 @@
 # G_htop Community changelog
 
-## 0.1.0 — unpublished release candidate
+## 1.1.0 — 2026-10-24
+
+- Added a conventional About dialog with the Community version, Apache-2.0 license,
+  and a G_htop Pro website link identifying the separately purchased professional edition.
+- Retained all free Community features, desktop layout, filters, sorting and detailed tabs.
+- Included the completed Community AMD/NVIDIA/Intel discovery and optional NVML work.
+- Consolidated GPU utilization into one graph with distinct device colors and a compact
+  legend; full telemetry remains on hover. Same-model cards keep separate histories.
+- Preserved unaffected GPU histories across detection reorder and card add/remove;
+  missing readings stay N/A and replaced cards do not acquire previous history.
+- Disconnected notebook routing before child teardown to stop the existing shutdown warnings.
+- Updated source/package version metadata and current release documentation to 1.1.0.
+- Preserved the Apache License, Version 2.0. No Pro application or licensing modules ship.
+
+Verified binary format: Arch/Manjaro x86_64 package. DEB/RPM/AppImage and other
+platform binaries are not offered or claimed as tested.
+
+## 0.1.0 — initial release
 
 - Read-only process CPU/RAM, system/user systemd services, and TCP/UDP sockets.
 - Logical CPU meters and AMD GPU/VRAM telemetry with five-minute GPU history.

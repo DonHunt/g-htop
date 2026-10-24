@@ -9,10 +9,12 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <functional>
 
 class GpuSummary : public Gtk::Label {
 public:
-  GpuSummary()
+  using Discovery = std::function<std::vector<GpuDevice>()>;
+  explicit GpuSummary(Discovery discover = [] { auto d = discover_gpus(); community::gpu::nvml().augment(d); return d; }, const community::gpu::Nvml* provider = &community::gpu::nvml())
       : Gtk::Label("GPU and VRAM N/A"), mutex_(), cv_(), stop_(false),
         pending_(""), ready_(false) {
     set_xalign(0.0);
@@ -26,46 +28,15 @@ public:
     timer_ = Glib::signal_timeout().connect(
         sigc::mem_fun(*this, &GpuSummary::poll), 250);
 
-    worker_ = std::thread([this] {
-      try {
-        auto devices = discover_gpus();
-        while (!stop_.load()) {
-          try {
-            std::vector<GpuReading> readings;
-            std::string text = gpu_text(devices, &readings);
-            {
-              std::lock_guard<std::mutex> lock(mutex_);
-              pending_ = text;
-              pending_readings_ = readings;
-              ready_ = true;
-            }
-          } catch (...) {
-            // Failure, do nothing
-          }
-          std::unique_lock<std::mutex> lock(mutex_);
-          cv_.wait_for(lock, std::chrono::seconds(2),
-                       [this] { return stop_.load(); });
-        }
-      } catch (...) {
-        // Discovery failure, use empty vector
-        auto devices = std::vector<GpuDevice>{};
-        while (!stop_.load()) {
-          try {
-            std::vector<GpuReading> readings;
-            std::string text = gpu_text(devices, &readings);
-            {
-              std::lock_guard<std::mutex> lock(mutex_);
-              pending_ = text;
-              pending_readings_ = readings;
-              ready_ = true;
-            }
-          } catch (...) {
-            // Failure, do nothing
-          }
-          std::unique_lock<std::mutex> lock(mutex_);
-          cv_.wait_for(lock, std::chrono::seconds(2),
-                       [this] { return stop_.load(); });
-        }
+    worker_ = std::thread([this, discover=std::move(discover), provider] {
+      while (!stop_.load()) {
+        std::vector<GpuReading> readings;
+        std::string text;
+        try { text = gpu_text(discover(), &readings, provider); }
+        catch (...) { text = "GPU telemetry unavailable; discovery will retry"; readings.clear(); }
+        std::unique_lock<std::mutex> lock(mutex_);
+        pending_ = std::move(text); pending_readings_ = std::move(readings); ready_ = true;
+        cv_.wait_for(lock, std::chrono::seconds(2), [this] { return stop_.load(); });
       }
     });
   }
@@ -104,7 +75,8 @@ for (const auto& r : readings) {
 details += r.detail + "\n";
 }
 details += "Per-process GPU utilization and VRAM attribution are unavailable.";
-set_tooltip_text(details);
+gchar* valid_details = g_utf8_make_valid(details.data(), details.size());
+set_tooltip_text(valid_details); g_free(valid_details);
     sample_signal_.emit(readings);
     g_free(const_cast<gchar *>(valid_text));
     return true;

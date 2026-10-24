@@ -1,17 +1,18 @@
 # Maintainer: Donald E. Hunt <g_htop@don-hunt.com>
 # Copyright © 2026 Donald E. Hunt
 pkgname=g_htop
-pkgver=0.1.0
-pkgrel=2
-pkgdesc='Read-only GTK process, service, CPU, network and AMD GPU monitor'
+pkgver=1.1.0
+pkgrel=1
+pkgdesc='Read-only GTK process, service, CPU, network and GPU monitor'
 arch=('x86_64')
+url='https://github.com/DonHunt/g-htop'
 license=('Apache-2.0')
 depends=('gtkmm3' 'glibc' 'gcc-libs' 'systemd' 'iproute2' 'coreutils' 'hicolor-icon-theme')
 makedepends=('cmake' 'pkgconf')
-optdepends=('pciutils: descriptive AMD GPU names')
-options=('!debug')
+optdepends=('hwdata: descriptive GPU names from PCI identities')
+options=('!debug' '!lto')
 source=("G_htop-${pkgver}.tar.gz")
-sha256sums=('355a8f47e5b6e7231124411a0e79a3bd20118f7b03946eb0e144c8d505c4bd24')
+sha256sums=('e5f30412a191fe6c16edd6e8dfa9c79864ecbaaa002e8c24e36f5b16f5bd4bbe')
 
 build() {
     cmake -S "$srcdir/G_htop-$pkgver" -B "$srcdir/build" \
@@ -19,6 +20,10 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_INSTALL_LIBDIR=lib
     cmake --build "$srcdir/build" --parallel 2
+}
+
+check() {
+    ctest --test-dir "$srcdir/build" --output-on-failure
 }
 
 package() {
