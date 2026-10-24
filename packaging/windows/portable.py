@@ -156,7 +156,7 @@ shutil.copy2(source / "data/icons/G_htop.svg", icon / "G_htop.svg")
 # Native query-loaders is used after staging to produce a relocatable cache.
 (out / "G_htop.cmd").write_text('@echo off\r\nstart "" "%~dp0bin\\G_htop.exe"\r\n')
 (out / "README-WINDOWS.txt").write_text(
-    "G_htop Community Edition 1.1.0\n\nExtract the entire ZIP to a folder. Double-click G_htop.cmd or bin\\G_htop.exe.\nKeep bin, lib and share together. No MSYS2 or administrator account required.\nThis is a native Windows 11 test candidate; see WINDOWS_RELEASE_NOTES.md.\nCommunity is free under Apache-2.0. G_htop Pro is purchased separately:\nhttps://don-hunt.com/G_htopPro/\n"
+    "G_htop Community Edition 1.1.0\n\nExtract the entire ZIP to a folder. Double-click G_htop.cmd or bin\\G_htop.exe.\nKeep bin, lib, share and etc together. No MSYS2 or administrator account required.\nThis is a native Windows 11 test candidate; see WINDOWS_RELEASE_NOTES.md.\nCommunity is free under Apache-2.0. G_htop Pro is purchased separately:\nhttps://don-hunt.com/G_htopPro/\n"
 )
 shutil.copytree(
     materials / "rust-notices", out / "share/licenses/librsvg-rust", dirs_exist_ok=True

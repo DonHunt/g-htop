@@ -65,7 +65,7 @@ paths relative to the package root. GdkPixbuf resolves those paths from its DLL
 installation prefix. Verify the package after moving it to a different folder.
 The application locates GTK resources relative to `bin/G_htop.exe`; the working
 directory is irrelevant. Zip the complete staging directory, preserving its
-`bin`, `lib`, `share`, notices and instructions. In PowerShell:
+`bin`, `lib`, `share`, `etc`, notices and instructions. In PowerShell:
 
 ```powershell
 Compress-Archive -Path dist/G_htop-Community-1.1.0-Windows-x64 -DestinationPath G_htop-Community-1.1.0-Windows-x64.zip
@@ -73,7 +73,7 @@ Get-FileHash G_htop-Community-1.1.0-Windows-x64.zip -Algorithm SHA256
 ```
 
 Extract the complete ZIP and run `G_htop.cmd` or `bin/G_htop.exe`. Keep `bin`,
-`lib` and `share` together. Administrator privileges and MSYS2 are unnecessary.
+`lib`, `share` and `etc` together. Administrator privileges and MSYS2 are unnecessary.
 The package is unsigned; confirm its published SHA256 before launching.
 
 Archive the exact reviewed source commit with `git archive --format=zip`, and

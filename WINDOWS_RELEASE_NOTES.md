@@ -13,7 +13,7 @@ no process termination, service management or GPU configuration controls.
 
 Extract the entire Windows ZIP into a folder you can write to. Run `G_htop.cmd`
 or `bin/G_htop.exe`. No MSYS2 installation or administrator account is required.
-Keep the executable, DLLs, `lib`, `share` and notices together when moving it.
+Keep the executable, DLLs, `lib`, `share`, `etc` and notices together when moving it.
 Verify the supplied SHA256SUMS before launch. The executable is unsigned.
 
 ## Validation status
