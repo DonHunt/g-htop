@@ -83,3 +83,7 @@ STOP HERE when artifacts/checksums and review branch are verified. No Windows bi
 ### Resume instruction
 
 Read this latest checkpoint and BUILD-INFO-WINDOWS.json, check Git status/log and SHA256SUMS, then incorporate the owner's native Windows results. Reuse the prepared artifacts and matching build environment; do not restart the port. Fix reported defects, rerun relevant checks, and preserve the publication gate. No timer checkpoint is required while stopped at the native testing handoff; if implementation resumes, checkpoint at least every 20 minutes of active work.
+
+## Final archive/review verification 2026-10-24T04:50:15-04:00
+
+Draft PR: https://github.com/DonHunt/g-htop/pull/1 (open, unmerged). The review branch is pushed; production main and the original v1.1.0 tag remain at their original commits. Windows artifacts remain local under ../artifacts/. All six SHA256SUMS entries, both ZIP integrity checks, runtime-source xz integrity, packaged executable hash, exact archived source, required resources, relative loader paths and exclusion of compiler/MSYS/test executables passed verification. BUILD-INFO-WINDOWS.json records the exact archive commit; refresh it and SHA256SUMS for this documentation-only final checkpoint. No application code changed after the successful final tests. Work is stopped at owner native Windows 11 validation; the full checklist is in WINDOWS_RELEASE_NOTES.md.
