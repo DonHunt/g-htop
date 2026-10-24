@@ -1,4 +1,7 @@
-#include <unistd.h>
+#include "platform/process.hpp"
+#ifdef _WIN32
+#include "platform/windows/runtime.hpp"
+#endif
 #include <cmath>
 #include <iterator>
 #include <vector>
@@ -30,8 +33,6 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/label.h>
 #include <glibmm/ustring.h>
-#include <sys/types.h>
-#include <dirent.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -233,34 +234,15 @@ void update_status() {
     std::string monitoring_status = m_services.monitoring_status();
     std::string text;
 
-    // Read uptime from /proc/uptime
-    FILE* uptime_file = fopen("/proc/uptime", "r");
-    if (uptime_file) {
-        double seconds;
-        if (fscanf(uptime_file, "%lf", &seconds) == 1) {
-            int days = static_cast<int>(seconds / (60 * 60 * 24));
-            seconds -= days * 60 * 60 * 24;
-            int hours = static_cast<int>(seconds / (60 * 60));
-            seconds -= hours * 60 * 60;
-            int minutes = static_cast<int>(seconds / 60);
-
-            text += "Uptime: ";
-            if (days > 0) {
-                text += std::to_string(days) + " day" + (days == 1 ? "" : "s") + ", ";
-            }
-            if (hours > 0 || days > 0) {
-                text += std::to_string(hours) + " hour" + (hours == 1 ? "" : "s") + ", ";
-            }
-            text += std::to_string(minutes) + " minute" + (minutes == 1 ? "" : "s");
-        } else {
-            text = "Uptime: N/A";
-            warning = true;
-        }
-        fclose(uptime_file);
-    } else {
-        text = "Uptime: N/A";
-        warning = true;
-    }
+    auto uptime = monitoring::uptime_seconds();
+    if (uptime) {
+        auto minutes = static_cast<unsigned long long>(*uptime / 60);
+        auto days=minutes/1440, hours=(minutes/60)%24;
+        text="Uptime: ";
+        if(days) text+=std::to_string(days)+" day"+(days==1?"":"s")+", ";
+        if(hours||days) text+=std::to_string(hours)+" hour"+(hours==1?"":"s")+", ";
+        text+=std::to_string(minutes%60)+" minute"+(minutes%60==1?"":"s");
+    } else { text="Uptime: N/A"; warning=true; }
 
     // Append monitoring status
     text += " | " + monitoring_status;
@@ -286,68 +268,19 @@ void update_status() {
 }
 private:
 bool refresh() {
-    auto now = std::chrono::steady_clock::now();
-    double elapsed = std::chrono::duration<double>(now - m_last_refresh).count();
-    auto prev_times = m_process_times;
-    m_process_times.clear();
     m_refTreeModel->clear();
-
-    DIR *dir = opendir("/proc");
-    if (dir) {
-        struct dirent *entry;
-        while ((entry = readdir(dir)) != nullptr) {
-            pid_t pid;
-            if (sscanf(entry->d_name, "%u", &pid) == 1) {
-                std::ifstream stat_file("/proc/" + std::string(entry->d_name) + "/stat");
-                std::string line;
-                if (std::getline(stat_file, line)) {
-                    size_t pos = line.rfind(')');
-                        std::istringstream iss(line.substr(pos + 1));
-                    std::vector<std::string> tokens;
-                    std::string token;
-                    while (iss >> token) {
-                        tokens.push_back(token);
-                    }
-                    if (tokens.size() >= 20) {
-                        size_t start = line.find('(') + 1;
-                        size_t end = line.rfind(')');
-                        std::string rawName = line.substr(start, end - start);                        gchar* valid = g_utf8_make_valid(rawName.c_str(), -1);
-                        Glib::ustring name(valid);
-                        g_free(valid);
-
-                        long ticks = std::stol(tokens[11]) + std::stol(tokens[12]);
-                        long starttime = std::stol(tokens[19]);
-
-                        auto it = prev_times.find(pid);
-                        double cpu = 0.0;
-                        if (it != prev_times.end() && it->second.starttime == starttime && ticks >= it->second.ticks && elapsed > 0) {
-                            cpu = 100.0 * (ticks - it->second.ticks) / sysconf(_SC_CLK_TCK) / elapsed;
-                        }
-
-                        std::ifstream statm_file("/proc/" + std::string(entry->d_name) + "/statm");
-                        unsigned long long virtualPages, residentPages;
-                        if (statm_file >> virtualPages >> residentPages) {
-                            double memory_mib = static_cast<double>(residentPages * sysconf(_SC_PAGESIZE)) / 1048576.0;
-
-                            auto row = *(m_refTreeModel->append());
-                            row[m_columns.name] = name;
-                            row[m_columns.pid] = pid;
-                            row[m_columns.cpu] = std::round(cpu * 10) / 10;
-                            row[m_columns.memory] = std::round(memory_mib * 10) / 10;
-
-                            m_process_times[pid] = {starttime, ticks};
-                        }
-                    }
-                }
-            }
-        }
-        closedir(dir);
+    for (const auto& process : m_process_collector.sample()) {
+        auto row=*(m_refTreeModel->append());
+        gchar* valid=g_utf8_make_valid(process.name.c_str(), -1);
+        row[m_columns.name]=Glib::ustring(valid); g_free(valid);
+        row[m_columns.pid]=process.pid;
+        row[m_columns.cpu]=std::round(process.cpu*10)/10;
+        row[m_columns.memory]=std::round(process.memory*10)/10;
     }
 
     update_status();
     ++m_sample_number;
     m_footer_label.set_text("Processes: " + std::to_string(m_refTreeModel->children().size()) + ", Sample: " + std::to_string(m_sample_number));
-    m_last_refresh = std::chrono::steady_clock::now();
     return true;
 }
 
@@ -357,13 +290,8 @@ bool refresh() {
     Glib::RefPtr<Gtk::ListStore> m_refTreeModel;
     Gtk::Label m_footer_label;
     sigc::connection m_timeout_connection;
-    std::chrono::steady_clock::time_point m_last_refresh = std::chrono::steady_clock::now();
+    monitoring::ProcessCollector m_process_collector;
     int m_sample_number = 0;
-    struct ProcessData {
-        long starttime;
-        long ticks;
-    };
-    std::map<pid_t, ProcessData> m_process_times;
 
     class ModelColumns : public Gtk::TreeModel::ColumnRecord {
     public:
@@ -401,6 +329,9 @@ bool m_gpu_valid = false;
 };
 
 int main(int argc, char *argv[]) {
+#ifdef _WIN32
+    monitoring::win::configure_runtime();
+#endif
     auto app = Gtk::Application::create(argc, argv, "org.ghtop.Monitor");
     ProcessWindow window;
     return app->run(window);

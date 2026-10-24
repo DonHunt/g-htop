@@ -56,6 +56,17 @@ public:
     auto it = series_.find(key);
     return it == series_.end() ? 0 : it->second.points.size();
   }
+  std::string telemetry_status() const {
+#ifdef _WIN32
+    if (!series_.empty() && std::none_of(series_.begin(), series_.end(),
+        [](const auto& entry) { return valid(entry.second.reading.usage); })) {
+      return monitoring::win::running_under_wine()
+          ? "GPU utilization unavailable in this Wine session."
+          : "GPU utilization counters unavailable.";
+    }
+#endif
+    return {};
+  }
   std::array<double, 3> series_color(const std::string& key) const {
     // Golden-angle hues continue beyond the explicit high-contrast palette.
     static constexpr std::array<std::array<double, 3>, 8> palette{{
@@ -117,6 +128,14 @@ protected:
     for (int i = 0; i <= 5; ++i) {
       double x = 48 + (w - 60) * i / 5.0;
       text(cr, i == 5 ? "Now" : "-" + std::to_string(5 - i) + "m", x - (i == 5 ? 26 : 12), bottom + 5);
+    }
+    const auto status = telemetry_status();
+    if (!status.empty()) {
+      text(cr, status, 60, top + 16);
+#ifdef _WIN32
+      if (monitoring::win::running_under_wine())
+        text(cr, "Validate GPU monitoring on native Windows 11.", 60, top + 38);
+#endif
     }
     cr->save(); cr->rectangle(47, top - 2, w - 58, bottom - top + 4); cr->clip();
     const auto now = Clock::now();

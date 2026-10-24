@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform/cpu.hpp"
 #include <algorithm>
 #include <fstream>
 #include <gtkmm.h>
@@ -71,56 +72,12 @@ private:
   Gtk::FlowBox flow;
   class Meter;
   std::map<unsigned, Meter *> meters;
-  struct Counters {
-    unsigned long long total = 0;
-    unsigned long long idle = 0;
-  };
-  std::map<unsigned, Counters> previous;
+  monitoring::CpuCollector collector;
   sigc::connection timer;
   unsigned sample = 0;
 
-  static auto read_cpus() -> std::map<unsigned, Counters> {
-    std::map<unsigned, Counters> result;
-    std::ifstream file("/proc/stat");
-    if (!file.is_open())
-      return result;
-
-    std::string line;
-    while (std::getline(file, line)) {
-      if (line.find("cpu ") == 0)
-        continue; // Skip aggregate cpu
-      if (line.find("cpu") != 0 || !isdigit(line[3]))
-        break; // Stop on non-cpu line
-
-      unsigned id = std::stoi(line.substr(3));
-      Counters counters;
-      unsigned long long array[8] = {0};
-      std::istringstream iss(line);
-      std::string ignored;
-      iss >> ignored;
-      bool valid = true;
-      for (int i = 0; i < 8; ++i) {
-        if (!(iss >> array[i])) {
-          valid = false;
-          break;
-        }
-      }
-      if (!valid)
-        continue;
-      counters.total = 0;
-      for (int i = 0; i < 8; ++i) {
-        counters.total += array[i];
-      }
-      counters.idle = array[3] + array[4];
-
-      result[id] = counters;
-    }
-
-    return result;
-  }
-
   bool refresh() {
-    auto current = read_cpus();
+    auto current = collector.sample();
     ++sample;
 
     for (const auto &[id, _] : current) {
@@ -132,20 +89,8 @@ private:
     }
 
     for (auto &[id, meter] : meters) {
-      double percent = -1.0;
-      if (current.count(id) && previous.count(id) &&
-          current[id].total >= previous[id].total &&
-          current[id].idle >= previous[id].idle) {
-        auto dt = current[id].total - previous[id].total;
-        auto di = current[id].idle - previous[id].idle;
-        if (dt > 0 && di <= dt) {
-          percent = 100.0 * (dt - di) / dt;
-        }
-      }
-      meter->update(percent);
+      meter->update(current.count(id) ? current.at(id) : -1.0);
     }
-
-    previous = current;
 
     header.set_text("Detected: " + std::to_string(current.size()) +
                     ", Sample: " + std::to_string(sample));

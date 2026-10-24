@@ -1,8 +1,23 @@
 # G_htop Community Edition 1.1.0
 
-A read-only Linux process, service, CPU, network, and GPU monitor using C++17 and gtkmm 3. It follows the desktop GTK theme.
+A read-only process, service, CPU, network, and GPU monitor using C++17 and gtkmm 3. The four-panel dashboard combines processes, services, one shared multi-GPU graph and CPU meters. Community Edition is free and open source; G_htop Pro is the separately purchased professional edition.
 
-## Screenshots
+## Windows and Linux
+
+Linux 1.1.0 packages are available from the [existing release](https://github.com/DonHunt/g-htop/releases/tag/v1.1.0).
+Windows 11 x64 support is prepared on the Windows review branch and awaits owner
+native validation before binary publication. See [BUILD-WINDOWS.md](BUILD-WINDOWS.md)
+and [WINDOWS_RELEASE_NOTES.md](WINDOWS_RELEASE_NOTES.md) for build, portable
+packaging and testing instructions. No Windows download is advertised yet.
+
+The UI, layout, shared GPU colors and About/Pro link are shared across both
+platforms. Windows uses native process, service, PDH, DXGI and IP Helper APIs;
+metrics unavailable from Windows or a driver show N/A. Wine automatically uses the packaged font configuration for readable text.
+Windows CPU/GPU counters unavailable in Wine remain N/A; the GPU chart explains
+that native Windows testing is required. The detailed Linux behavior and build
+instructions below remain applicable to Linux.
+
+## Screenshots (Linux)
 
 ![G_htop dashboard](docs/images/dashboard.png)
 
@@ -39,7 +54,7 @@ and gtkmm 3 (GTK 3). System/user services use `systemctl` from systemd; network
 connections use `ss` from iproute2; bounded helper calls use `timeout` from
 coreutils. GPU telemetry depends on accessible driver sysfs counters or optional NVIDIA NVML.
 The `hwdata` PCI database is optional for descriptive GPU names. No root access is
-needed for ordinary monitoring. No Windows, macOS or iOS edition is provided.
+needed for ordinary monitoring. Windows build requirements are documented separately above. No macOS or iOS edition is provided.
 
 On Arch/Manjaro, install build prerequisites through your normal package manager:
 `base-devel cmake pkgconf gtkmm3`. Runtime package dependencies are declared in

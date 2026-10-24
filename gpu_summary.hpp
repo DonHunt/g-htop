@@ -14,7 +14,11 @@
 class GpuSummary : public Gtk::Label {
 public:
   using Discovery = std::function<std::vector<GpuDevice>()>;
-  explicit GpuSummary(Discovery discover = [] { auto d = discover_gpus(); community::gpu::nvml().augment(d); return d; }, const community::gpu::Nvml* provider = &community::gpu::nvml())
+  explicit GpuSummary(Discovery discover = [] { auto d = discover_gpus();
+#ifndef _WIN32
+ community::gpu::nvml().augment(d);
+#endif
+ return d; }, const community::gpu::Nvml* provider = &community::gpu::nvml())
       : Gtk::Label("GPU and VRAM N/A"), mutex_(), cv_(), stop_(false),
         pending_(""), ready_(false) {
     set_xalign(0.0);

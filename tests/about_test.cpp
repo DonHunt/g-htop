@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     assert(activated);
     const std::filesystem::path output(argv[1]);
     std::filesystem::create_directories(output);
-    Gdk::Pixbuf::create(dialog.get_window(), 0, 0, dialog.get_allocated_width(), dialog.get_allocated_height())->save((output/"about.png").string(), "png");
+    if (!g_getenv("G_HTOP_TEST_NO_SCREENSHOT")) Gdk::Pixbuf::create(dialog.get_window(), 0, 0, dialog.get_allocated_width(), dialog.get_allocated_height())->save((output/"about.png").string(), "png");
     dialog.response(Gtk::RESPONSE_CLOSE);
   }, 350);
   dialog.run();

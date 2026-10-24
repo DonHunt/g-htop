@@ -44,3 +44,7 @@ compile_commands.json
 /.codex-acceptance.json
 /G_htop.desktop
 
+
+# Python packaging helper caches
+__pycache__/
+*.pyc
