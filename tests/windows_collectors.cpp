@@ -87,6 +87,18 @@ int main() {
       L"pid_123_luid_0xABCDEF01_0x12345678_phys_0_eng_0_engtype_3D");
   assert(identity && *identity == gpu_identity(luid));
   assert(!monitoring::win::adapter_identity(L"malformed"));
+  auto aggregated = monitoring::win::GpuCounters::aggregate(
+      {{L"pid_1_luid_0xABCDEF01_0x12345678_phys_0_eng_0_engtype_3D", 30},
+       {L"pid_2_luid_0xABCDEF01_0x12345678_phys_0_eng_0_engtype_3D", 40},
+       {L"pid_3_luid_0xABCDEF01_0x12345678_phys_0_eng_1_engtype_Copy", 60},
+       {L"pid_4_luid_0x00000000_0x00000002_phys_0_eng_0_engtype_3D", 0}},
+      {{L"luid_0xABCDEF01_0x12345678_phys_0", 1024},
+       {L"luid_0xABCDEF01_0x12345678_phys_1", 2048}});
+  assert(aggregated.at(*identity).utilization.value() == 70);
+  assert(aggregated.at(*identity).used.value() == 3072);
+  assert(aggregated.at("luid_0x00000000_0x00000002").utilization.value() == 0);
+  assert(!aggregated.at("luid_0x00000000_0x00000002").used);
+  assert(monitoring::win::GpuCounters::aggregate({}, {}).empty());
   auto devices = discover_gpus();
   std::vector<GpuReading> samples;
   auto text = gpu_text(devices, &samples);

@@ -55,3 +55,31 @@ Read this file, git status/log, and `../evidence/` results first. Continue from 
 - Evidence: `../evidence/native-windows-build.log`, `native-collectors-network.log`, `linux-build.log`, `staging.log`, `finalize.log`, `windows-dashboard.png`; reproducible local environment helpers in `../evidence/`.
 - Resume: read the latest checkpoint, git status/log and evidence. Continue the current task; do not redo completed toolchain setup. Do not publish Windows binaries before owner native test approval.
 - Next checkpoint due no later than 2026-10-24T04:49:57-04:00 during active work.
+
+## Native-validation handoff checkpoint 2026-10-24T04:47:07-04:00
+
+### Completed and verified
+
+- Native Windows UCRT64 application and all focused test executables build successfully with official MSYS2 GCC 16.2.0, gtkmm 3.24.11 and GTK 3.24.52. Dependency binary/source hashes and Rust metadata are committed in packaging/windows/dependencies.json.
+- All three focused Windows tests pass from the staged runtime with development WINEPATH removed: native collectors/controlled TCP+UDP/GPU aggregation; shared multi-GPU graph identity, colors, hot replacement, N/A and zero; About v1.1.0, Apache text, paid-Pro distinction and actual link activation URI.
+- Three final launches and normal window-manager shutdowns pass from a moved folder containing spaces and Édition, with /tmp as cwd. Dashboard, divider drag/reset, all tabs, resizing, F11 fullscreen toggle and About are visually checked. Relative image cache and all DLL imports verified; 55 runtime DLLs and 14 image modules staged.
+- Pro URL returned HTTP 200 and correct Pro page title.
+- Linux Release build and all 12 collector CTest cases pass; focused shared graph and About/link GTK regression also pass. LICENSE SHA256 is unchanged from Linux main.
+- Matching MSYS2 runtime source packages (47 binaries, 46 source archives), locked vendor sources for 361 librsvg Rust crates, notices and source hashes are prepared in the separate Windows-runtime-sources archive. No compiler, MSYS runtime DLL, proprietary Pro code, credentials or signing keys are shipped.
+- Diff and generated-artifact/credential checks completed. Current source is review-only; main, v1.1.0 and all 11 Linux release assets remain unchanged.
+
+### Artifacts and evidence
+
+Final deliverables are under ../artifacts/: Windows x64 ZIP, exact-source ZIP, Windows runtime-sources tar.xz, BUILD-WINDOWS.md, WINDOWS_RELEASE_NOTES.md, BUILD-INFO-WINDOWS.json and SHA256SUMS. The build manifest records the exact review commit; the source ZIP is git-archived from that commit. Git review branch: windows/community-1.1.0. A draft review may be opened, without merging or binary publication.
+
+Evidence under ../evidence/: native-windows-final-build.log, final-tests.json and final-*.log, ui-results.json, final-ui-qa.log, qa-*.png, linux-final-build.log, linux-gtk-final.log, runtime-manifest.json and source/vendor logs. Local isolated build helpers and complete verified package caches remain there for continuation.
+
+### Remaining / native-only gate
+
+Owner must test on Windows 11 x64 using WINDOWS_RELEASE_NOTES.md checklist: fonts/scaling, real CPU/process/service/network accuracy, each physical GPU and distinct lines under load, driver VRAM availability, multiple monitors and native keyboard/close behavior. Wine cannot establish those results. Wine Win32 font rendering required the documented test-only fontconfig setting; simulated Escape/Alt+F4 was unreliable, while normal window-manager closing passed.
+
+STOP HERE when artifacts/checksums and review branch are verified. No Windows binary has been uploaded to GitHub Releases. Do not merge main, move the existing v1.1.0 tag, or publish the Windows package until native owner testing succeeds and publication is explicitly approved. A Windows-specific source tag and release-asset update remain gated; keep the Linux tag/assets intact.
+
+### Resume instruction
+
+Read this latest checkpoint and BUILD-INFO-WINDOWS.json, check Git status/log and SHA256SUMS, then incorporate the owner's native Windows results. Reuse the prepared artifacts and matching build environment; do not restart the port. Fix reported defects, rerun relevant checks, and preserve the publication gate. No timer checkpoint is required while stopped at the native testing handoff; if implementation resumes, checkpoint at least every 20 minutes of active work.

@@ -25,8 +25,18 @@ existing v1.1.0 tag are preserved.
 
 Preliminary checks use MSYS2 UCRT64 Windows GCC/CMake/Ninja under Wine, with an
 isolated prefix and no installed host application changes. Linux regression
-checks continue against Ubuntu 22.04. Final results and exact source revision
-are recorded in WINDOWS_PORT_PROGRESS.md and the candidate build manifest.
+checks continue against Ubuntu 22.04. Checks passed: Windows collector tests (including owned TCP/UDP sockets and GPU
+aggregation fixtures), shared multi-GPU graph tests, About/link activation,
+three moved-folder launches and normal shutdowns, dashboard resizing/dividers,
+all tabs and F11 fullscreen toggling. The Pro URL returned HTTP 200. Linux passed
+12 collector CTest cases plus graph/About GTK regression. Exact source revision
+and artifacts are recorded in the candidate build manifest.
+
+Wine visual QA used Pango's fontconfig backend because Wine's Win32 font path
+rendered damaged glyphs. Native Windows uses its normal font backend. Simulated
+Escape/Alt+F4 delivery was unreliable in Wine; shutdown was verified through the
+normal window-manager close request. Native Windows keyboard handling, fonts,
+scaling, hardware telemetry and multi-GPU accuracy still require owner testing.
 
 ## Genuine limitations
 

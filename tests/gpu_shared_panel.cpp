@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   auto timer = Glib::signal_timeout().connect([&] {
     auto surface = window.get_window();
     assert(surface);
-    Gdk::Pixbuf::create(surface,0,0,window.get_allocated_width(),window.get_allocated_height())->save((out/(stage == 0 ? "mixed-gpus.png" : "no-gpu.png")).string(),"png");
+    if (!g_getenv("G_HTOP_TEST_NO_SCREENSHOT")) Gdk::Pixbuf::create(surface,0,0,window.get_allocated_width(),window.get_allocated_height())->save((out/(stage == 0 ? "mixed-gpus.png" : "no-gpu.png")).string(),"png");
     if (stage++ == 0) {graph.append_sample({}); assert(graph.series_count() == 0); return true;}
     window.hide(); return false;
   },300);

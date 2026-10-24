@@ -1,6 +1,6 @@
 #pragma once
-#include "../../presentation.hpp"
 #include "common.hpp"
+#include "../../presentation.hpp"
 #include "pdh.hpp"
 #include <algorithm>
 #include <dxgi1_2.h>
@@ -75,14 +75,22 @@ public:
   struct Metrics {
     std::optional<double> utilization, used;
   };
-  std::map<std::string, Metrics> sample() {
+  static std::map<std::string, Metrics>
+  aggregate(const std::map<std::wstring, double> &engine_values,
+            const std::map<std::wstring, double> &memory_values) {
     std::map<std::string, Metrics> result;
     std::map<std::string, std::map<std::wstring, double>> engine_totals;
-    for (const auto &[instance, value] : engines.sample()) {
+    for (const auto &[instance, value] : engine_values) {
       auto identity = adapter_identity(instance);
       auto engine = instance.find(L"_phys_");
-      if (identity && engine != std::wstring::npos)
-        engine_totals[*identity][instance.substr(engine)] += value;
+      if (identity && engine != std::wstring::npos && std::isfinite(value) &&
+          value >= 0) {
+        auto key = instance.substr(engine);
+        auto duplicate = key.rfind(L'#');
+        if (duplicate != std::wstring::npos)
+          key.resize(duplicate);
+        engine_totals[*identity][key] += value;
+      }
     }
     // Sum processes sharing an engine, then report the busiest engine as
     // Windows Task Manager does. Different engines may run simultaneously.
@@ -92,12 +100,15 @@ public:
         maximum = std::max(maximum, total);
       result[id].utilization = std::clamp(maximum, 0.0, 100.0);
     }
-    for (const auto &[instance, value] : memory.sample()) {
+    for (const auto &[instance, value] : memory_values) {
       auto identity = adapter_identity(instance);
-      if (identity)
+      if (identity && std::isfinite(value) && value >= 0)
         result[*identity].used = result[*identity].used.value_or(0) + value;
     }
     return result;
+  }
+  std::map<std::string, Metrics> sample() {
+    return aggregate(engines.sample(), memory.sample());
   }
 };
 } // namespace monitoring::win

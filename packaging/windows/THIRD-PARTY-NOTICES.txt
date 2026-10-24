@@ -1,0 +1,23 @@
+G_htop Community Windows 1.1.0 runtime notices
+
+Community application: Apache License 2.0, Copyright 2026 Donald E. Hunt.
+See LICENSE and NOTICE. Community and its informational Pro link are separate
+from the commercial G_htop Pro edition. No Pro source or license enforcement
+code is included.
+
+Third-party runtime DLLs and data are official MSYS2 UCRT64 packages. Their
+licenses, copyrights and notices are retained under share/licenses. Exact
+versions, original binary hashes, source URLs and included paths are recorded
+in RUNTIME-MANIFEST.json. Rust crate notices and metadata are under
+share/licenses/librsvg-rust and RUST-CRATES.json. Rust standard library notices
+are included there as well.
+
+Dynamically linked GTK/C++ libraries can be replaced in bin. Matching upstream
+sources, package recipes and patches, and librsvg's locked Cargo vendor sources
+are provided in G_htop-Community-1.1.0-Windows-runtime-sources.tar.xz alongside
+the Windows candidate. That archive is a required redistribution companion;
+publish it with equivalent access whenever distributing the Windows binary.
+
+No Windows system DLLs, proprietary drivers, MSYS2 runtime, compiler, signing
+keys or credentials are included. This candidate is unsigned and awaits native
+Windows 11 owner validation before public binary release.

@@ -10,13 +10,15 @@ Install MSYS2 from https://www.msys2.org/. Open **MSYS2 UCRT64**, update it usin
 `pacman -Syu`, and reopen that shell if requested. Use official MSYS2 packages:
 
 ```sh
-pacman -S --needed mingw-w64-ucrt-x86_64-gcc \
+pacman -S --needed git mingw-w64-ucrt-x86_64-gcc \
   mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja \
   mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-python \
   mingw-w64-ucrt-x86_64-gtkmm3 mingw-w64-ucrt-x86_64-librsvg \
   mingw-w64-ucrt-x86_64-adwaita-icon-theme \
   mingw-w64-ucrt-x86_64-hicolor-icon-theme \
   mingw-w64-ucrt-x86_64-shared-mime-info
+git clone --branch windows/community-1.1.0 https://github.com/DonHunt/g-htop.git
+cd g-htop
 cmake -S . -B build-windows -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build-windows --parallel
 ctest --test-dir build-windows --output-on-failure
@@ -27,16 +29,25 @@ The preparation environment uses the official UCRT64 Windows compiler,
 CMake and Ninja under an isolated Wine prefix on Linux. This performs a Windows
 build; Wine is not evidence of Windows hardware telemetry accuracy.
 Exact dependency versions and archive SHA256 values accompany the candidate.
+The checked preparation used GCC 16.2.0, gtkmm 3.24.11, GTK 3.24.52 and the
+versions pinned in `packaging/windows/dependencies.json`. Use that manifest to
+retrieve the same official binary/source archives when exact reproduction is
+needed; a future `pacman -Syu` may select newer versions.
 
 ## Portable staging
 
 The packaging helper downloads nothing. Point it at the installed UCRT64 prefix
-and the compiled executable. Use a fresh output directory:
+and the compiled executable. Also extract the supplied, checksum-verified
+`G_htop-Community-1.1.0-Windows-runtime-sources.tar.xz` into `runtime-materials/`
+so that it contains `runtime-sources/`, `rust-notices/` and the Rust vendor tree.
+This supplies the matching source manifests and notices; the helper refuses to
+stage a package without them. Use a fresh output directory:
 
 ```sh
 /ucrt64/bin/python packaging/windows/portable.py \
   --prefix C:/msys64/ucrt64 --exe build-windows/G_htop.exe \
-  --output dist/G_htop-Community-1.1.0-Windows-x64
+  --output dist/G_htop-Community-1.1.0-Windows-x64 \
+  --runtime-materials runtime-materials
 ```
 
 The helper recursively resolves PE imports, fails on missing non-system DLLs,
@@ -54,7 +65,12 @@ paths relative to the package root. GdkPixbuf resolves those paths from its DLL
 installation prefix. Verify the package after moving it to a different folder.
 The application locates GTK resources relative to `bin/G_htop.exe`; the working
 directory is irrelevant. Zip the complete staging directory, preserving its
-`bin`, `lib`, `share`, notices and instructions.
+`bin`, `lib`, `share`, notices and instructions. In PowerShell:
+
+```powershell
+Compress-Archive -Path dist/G_htop-Community-1.1.0-Windows-x64 -DestinationPath G_htop-Community-1.1.0-Windows-x64.zip
+Get-FileHash G_htop-Community-1.1.0-Windows-x64.zip -Algorithm SHA256
+```
 
 Extract the complete ZIP and run `G_htop.cmd` or `bin/G_htop.exe`. Keep `bin`,
 `lib` and `share` together. Administrator privileges and MSYS2 are unnecessary.
@@ -93,6 +109,14 @@ No vendor utility, PowerShell, WMIC or manual manufacturer selection is needed.
   containing spaces and non-ASCII characters, launched from a different cwd.
 - Wine: set `GDK_BACKEND=win32`, remove inherited Linux GTK module settings,
   and use an isolated `WINEPREFIX`. Never use Wine GPU values as native proof.
+  Wine 11.17 showed damaged glyphs with Pango's Win32 font backend in this
+  environment. Visual QA used `PANGOCAIRO_BACKEND=fontconfig` and an isolated
+  Fontconfig file pointing to the workstation's fonts. This QA setting is not
+  embedded in the application or required on native Windows. Native Windows
+  rendering/scaling must still be checked.
+- The focused GTK test tools capture screenshots by default. On older Cairo
+  backends that fail while capturing a window, set `G_HTOP_TEST_NO_SCREENSHOT=1`
+  and use an external capture tool; all functional assertions still run.
 - Windows PDH counters may be unavailable with particular drivers or privileges.
   Wait for two samples. Record N/A rather than substituting an invented value.
 - Test standard-user Windows 11 startup, shutdown, repeated launches, resize,

@@ -47,6 +47,27 @@ reviewed Community GPU adapter and tests under the same Community Apache-2.0
 license. Optional NVML declarations describe the public read-only ABI; NVIDIA
 libraries, SDKs, headers and drivers are not redistributed. Their upstream terms
 remain separate. The About link does not impose commercial terms on Community.
-No non-Linux edition is implemented.
+The original Linux release does not bundle a non-Linux edition.
 
 References: https://www.apache.org/licenses/LICENSE-2.0.txt
+
+
+## Windows portable candidate
+
+The Windows review branch adds original Community portability code under the
+same Apache-2.0 license. It includes no proprietary Pro code or private licensing
+materials. The original Linux release assets and tag remain unchanged.
+
+The portable Windows ZIP dynamically links official MSYS2 UCRT64 runtime DLLs
+and includes GTK image decoders, MIME/schema data and icon themes. Those third
+parties retain their own licenses. Complete package version, binary SHA256 and
+source URL records are in `packaging/windows/dependencies.json`. The portable
+ZIP contains `share/licenses`, Rust dependency notices, THIRD-PARTY-NOTICES.txt
+and runtime manifests. It includes no MSYS2 compiler or MSYS runtime DLL.
+
+Matching official source archives with recipes/patches, librsvg's checksum-locked
+Rust vendor sources, and Rust notices accompany the candidate in the separate
+Windows runtime-sources archive. GTK/C++ runtime DLLs may be replaced in `bin`;
+the application is dynamically linked. Do not publish a Windows binary without
+its notices and equivalent access to these corresponding runtime sources.
+The candidate is unsigned and awaiting native Windows 11 owner validation.
