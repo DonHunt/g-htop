@@ -15,6 +15,11 @@ find_package(Threads REQUIRED)
 add_executable(G_htop main.cpp)
 
 target_link_libraries(G_htop PRIVATE PkgConfig::GTKMM Threads::Threads ${CMAKE_DL_LIBS})
+if(WIN32)
+  target_compile_definitions(G_htop PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+  target_link_libraries(G_htop PRIVATE advapi32 psapi iphlpapi ws2_32 pdh dxgi dxguid)
+  set_target_properties(G_htop PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
 target_compile_definitions(G_htop PRIVATE G_HTOP_VERSION="${PROJECT_VERSION}")
 
 install(TARGETS G_htop
@@ -38,7 +43,7 @@ install(FILES docs/STAGED_LOCAL_LLM_DEVELOPMENT.md docs/DEVELOPMENT_OVERVIEW.md
 
 # Community hardware fixtures and focused GTK acceptance tools.
 include(CTest)
-if(BUILD_TESTING)
+if(BUILD_TESTING AND NOT WIN32)
   add_library(community_nvml_fixture SHARED tests/nvml_fixture.cpp)
   add_executable(community_gpu_tests tests/gpu_tests.cpp)
   target_include_directories(community_gpu_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -61,4 +66,15 @@ if(BUILD_TESTING)
   target_include_directories(community_gpu_gtk PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(community_gpu_gtk PRIVATE PkgConfig::GTKMM Threads::Threads ${CMAKE_DL_LIBS})
   target_compile_options(community_gpu_gtk PRIVATE -UNDEBUG)
+endif()
+
+if(BUILD_TESTING AND WIN32)
+  foreach(test windows_collectors gpu_shared_panel about_test)
+    add_executable(community_${test} tests/${test}.cpp)
+    target_include_directories(community_${test} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(community_${test} PRIVATE PkgConfig::GTKMM Threads::Threads advapi32 psapi iphlpapi ws2_32 pdh dxgi dxguid)
+    target_compile_definitions(community_${test} PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00 G_HTOP_VERSION="${PROJECT_VERSION}")
+    target_compile_options(community_${test} PRIVATE -UNDEBUG)
+  endforeach()
+  add_test(NAME windows-collectors COMMAND community_windows_collectors)
 endif()

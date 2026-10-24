@@ -12,7 +12,7 @@ public:
     set_program_name("G_htop Community Edition");
     set_version(version);
     set_copyright("Copyright © 2026 Donald E. Hunt");
-    set_comments("Free, open-source Linux system monitoring.\n"
+    set_comments("Free, open-source system monitoring.\n"
                  "G_htop Pro is the separately purchased professional edition.");
     set_license_type(Gtk::LICENSE_CUSTOM);
     set_license("Apache License, Version 2.0\n"

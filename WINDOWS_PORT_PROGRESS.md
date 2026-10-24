@@ -42,3 +42,16 @@ Due no later than 2026-10-24T04:31:27-04:00 during active work. Save all source/
 ### Resume instruction
 
 Read this file, git status/log, and `../evidence/` results first. Continue from the recorded current task; do not restart completed work or publish Windows binaries. Preserve Linux assets and existing background integrations.
+
+## Checkpoint 2026-10-24T04:29:57-04:00
+
+- Completed: separated shared models/UI from Linux collectors; added native Windows Toolhelp/process times/memory, SCM services, IP Helper TCP/UDP IPv4/6, processor-group/PDH CPU, DXGI+PDH GPU, uptime and portable GTK runtime setup.
+- Successful: Linux application and all existing tools built; all 12 Linux CTest cases passed. Official matching MSYS2 UCRT64 GCC 16.2 / gtkmm 3.24.11 Windows application and 3 test tools built under isolated Wine. Windows collector smoke passed, including a controlled TCP listener and UDP socket, process self-enumeration/memory/CPU, services and GPU identity parsing.
+- Portable staging: `../evidence/candidate-03` (~74 MiB), complete PE import closure and 14 relative image loader modules. Application launches without development WINEPATH. Not a final artifact yet.
+- Current task: investigate Wine text rendering; complete shared graph/About tests, UI navigation/resizing/shutdown and moved-folder tests. Collect corresponding MSYS2 runtime sources and finish docs/package manifests/checksums.
+- Known issue: first Wine Win32 font screenshot has damaged glyph rendering. Testing the supported Pango fontconfig backend inside isolated Wine. Native Windows graphics and telemetry remain unvalidated.
+- Toolchain decision: Ubuntu GCC 10/MSVCRT cross-tool trial rejected due header/runtime ABI mismatch. Final Windows builds use matching official MSYS2 UCRT64 Windows GCC/CMake/Ninja under Wine. Trial artifacts are outside Git and will not ship.
+- Remaining: finish UI verification and source/license audit, Linux GTK regression, final clean build/package, source archive tied to review commit, final native Win11 handoff. No production push, tag mutation or Windows binary publication.
+- Evidence: `../evidence/native-windows-build.log`, `native-collectors-network.log`, `linux-build.log`, `staging.log`, `finalize.log`, `windows-dashboard.png`; reproducible local environment helpers in `../evidence/`.
+- Resume: read the latest checkpoint, git status/log and evidence. Continue the current task; do not redo completed toolchain setup. Do not publish Windows binaries before owner native test approval.
+- Next checkpoint due no later than 2026-10-24T04:49:57-04:00 during active work.
